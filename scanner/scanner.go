@@ -1,6 +1,9 @@
 package scanner
 
 import (
+	"fmt"
+
+	"github.com/singurty/lox/parseerror"
 	"github.com/singurty/lox/token"
 )
 
@@ -32,7 +35,6 @@ func (sc *Scanner) scanToken() (byte) {
 	c := sc.source[sc.current]
 	sc.current++
 	switch (c) {
-		// single-character tokens
 		case '(':
 			sc.addToken(token.LEFT_PAREN)
 			break
@@ -64,6 +66,8 @@ func (sc *Scanner) scanToken() (byte) {
 			sc.addToken(token.STAR)
 			break
 		default:
+			parseerror.HadError = true
+			parseerror.Error(sc.line, fmt.Sprintf("Unexpected character: %c", c))
 	}
 	return c
 }

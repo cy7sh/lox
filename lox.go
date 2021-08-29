@@ -6,9 +6,8 @@ import (
 	"fmt"
 	"io"
 	"github.com/singurty/lox/scanner"
+	"github.com/singurty/lox/parseerror"
 )
-
-var hadError bool
 
 func main() {
 	if (len(os.Args) > 2) {
@@ -33,7 +32,7 @@ func runPrompt() {
 			panic(err)
 		}
 		run(text)
-		hadError = false
+		parseerror.HadError = false
 	}
 }
 
@@ -43,11 +42,6 @@ func runFile(file string) {
 		panic(err)
 	}
 	run(string(content))
-}
-
-func Error(line int, message string) {
-	hadError = true
-	fmt.Fprintf(os.Stderr, "[line %v] Error : %v", line, message)
 }
 
 func run(source string) {
