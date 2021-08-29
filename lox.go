@@ -45,10 +45,15 @@ func runFile(file string) {
 	run(string(content))
 }
 
-func reportError(line int, where, message string) {
-	fmt.Fprintf(os.Stderr, "[line %v] Error%v : %v", line, where, message)
+func Error(line int, message string) {
+	hadError = true
+	fmt.Fprintf(os.Stderr, "[line %v] Error : %v", line, message)
 }
 
 func run(source string) {
-
+	scanner := scanner.New(source)
+	tokens := scanner.ScanTokens()
+	for _, token := range tokens{
+		fmt.Print(token.String())
+	}
 }
