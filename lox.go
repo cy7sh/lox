@@ -10,10 +10,10 @@ import (
 )
 
 func main() {
-	if (len(os.Args) > 2) {
+	if len(os.Args) > 2 {
 		fmt.Printf("Usage: %v [file]\n", os.Args[0])
 		os.Exit(1)
-	} else if (len(os.Args) == 2) {
+	} else if len(os.Args) == 2 {
 		runFile(os.Args[1])
 	} else {
 		runPrompt()
@@ -25,10 +25,10 @@ func runPrompt() {
 	for {
 		fmt.Printf(">> ")
 		text, err := reader.ReadString('\n')
-		if (err == io.EOF) {
+		if err == io.EOF {
 			fmt.Println("\nExiting..")
 			return
-		} else if (err != nil) {
+		} else if err != nil {
 			panic(err)
 		}
 		run(text)
@@ -38,7 +38,7 @@ func runPrompt() {
 
 func runFile(file string) {
 	content, err := os.ReadFile(file)
-	if (err != nil) {
+	if err != nil {
 		panic(err)
 	}
 	run(string(content))

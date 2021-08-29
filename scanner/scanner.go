@@ -65,6 +65,30 @@ func (sc *Scanner) scanToken() (byte) {
 		case '*':
 			sc.addToken(token.STAR)
 			break
+		case '!':
+			if sc.match('=') {
+				sc.addToken(token.BANG_EQUAL)
+			} else {
+				sc.addToken(token.BANG)
+			}
+		case '=':
+			if sc.match('=') {
+				sc.addToken(token.EQUAL_EQUAL)
+			} else {
+				sc.addToken(token.EQUAL)
+			}
+		case '<':
+			if sc.match('=') {
+				sc.addToken(token.LESS_EQUAL)
+			} else {
+				sc.addToken(token.LESS)
+			}
+		case '>':
+			if sc.match('=') {
+				sc.addToken(token.GREATER_EQUAL)
+			} else {
+				sc.addToken(token.GREATER)
+			}
 		default:
 			parseerror.HadError = true
 			parseerror.Error(sc.line, fmt.Sprintf("Unexpected character: %c", c))
@@ -81,10 +105,10 @@ func (sc *Scanner) isAtEnd() bool {
 }
 
 func (sc *Scanner) match(expected byte) bool {
-	if (sc.isAtEnd()) {
+	if sc.isAtEnd() {
 		return false
 	}
-	if (sc.source[sc.current] != expected) {
+	if sc.source[sc.current] != expected {
 		return false
 	}
 	sc.current++
