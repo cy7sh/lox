@@ -5,7 +5,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"github.com/singurty/lox/lox"
+	"github.com/singurty/lox/scanner"
 )
 
 var hadError bool
@@ -32,7 +32,7 @@ func runPrompt() {
 		} else if (err != nil) {
 			panic(err)
 		}
-		lox.Run(text)
+		run(text)
 		hadError = false
 	}
 }
@@ -42,9 +42,13 @@ func runFile(file string) {
 	if (err != nil) {
 		panic(err)
 	}
-	lox.Run(string(content))
+	run(string(content))
 }
 
 func reportError(line int, where, message string) {
 	fmt.Fprintf(os.Stderr, "[line %v] Error%v : %v", line, where, message)
+}
+
+func run(source string) {
+
 }
