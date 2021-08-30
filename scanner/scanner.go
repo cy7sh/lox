@@ -2,6 +2,7 @@ package scanner
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/singurty/lox/parseerror"
 	"github.com/singurty/lox/token"
@@ -109,11 +110,39 @@ func (sc *Scanner) scanToken() (byte) {
 			sc.line++
 			break
 		default:
-			parseerror.HadError = true
-			parseerror.Error(sc.line, fmt.Sprintf("Unexpected character: %c", c))
+			if isDigit(c) {
+				sc.scanNumber()
+			} else {
+				parseerror.Error(sc.line, fmt.Sprintf("Unexpected character: %c", c))
+			}
 			break
 	}
 	return c
+}
+
+func isDigit(c byte) bool {
+	if _, err := strconv.Atoi(string(c)); err == nil {
+		return true
+	}
+	return false
+}
+
+func (sc *Scanner) scanNumber() {
+	for isDigit(sc.peek()) {
+		sc.advance()
+	}
+
+	// Look for fractional part
+	if (sc.peek() == '.' && isDigit(sc.peekNext())) {
+		// Consume the .
+		sc.advance()
+
+		for isDigit(sc.peek()) {
+			sc.advance()
+		}
+	}
+	// Parse as float
+	sc.addTokenWithLiteral(token.NUMBER, sc.source[sc.start:sc.current])
 }
 
 func (sc * Scanner) scanString() {
@@ -169,4 +198,11 @@ func (sc *Scanner) peek() byte {
 		return 0x00
 	}
 	return sc.source[sc.current]
+}
+
+func (sc *Scanner) peekNext() byte {
+	if sc.current + 1 >= len(sc.source) {
+		return 0x00
+	}
+	return sc.source[sc.current + 1]
 }
