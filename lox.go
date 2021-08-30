@@ -48,6 +48,6 @@ func run(source string) {
 	scanner := scanner.New(source)
 	tokens := scanner.ScanTokens()
 	for _, token := range tokens{
-		fmt.Print(token.String())
+		fmt.Println(token.String())
 	}
 }
