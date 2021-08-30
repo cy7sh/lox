@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/singurty/lox/parseerror"
 	"github.com/singurty/lox/token"
 )
 
@@ -15,6 +14,7 @@ type Scanner struct {
 	start int
 	current int
 	line int
+	HadError bool
 }
 
 // Map keywords to indentifiers
@@ -38,7 +38,7 @@ var keywords = map[string]token.Type {
 }
 
 func New(source string) Scanner {
-	scanner := Scanner{source: source, tokens: make([]token.Token, 0), start: 0, current: 0, line: 1}
+	scanner := Scanner{source: source, tokens: make([]token.Token, 0), line: 1}
 	return scanner
 }
 
@@ -129,7 +129,7 @@ func (sc *Scanner) scanToken() (byte) {
 				}
 				// unterminated comment
 				if sc.isAtEnd() {
-					parseerror.Error(sc.line, "Unterminated block comment")
+					handleError(sc.line, "Unterminated block comment")
 				} else {
 					// consume * and /
 					sc.advance()
@@ -154,7 +154,7 @@ func (sc *Scanner) scanToken() (byte) {
 			} else if isAlpha(c) {
 				sc.scanIdentifier()
 			} else {
-				parseerror.Error(sc.line, fmt.Sprintf("Unexpected character: %c", c))
+				handleError(sc.line, fmt.Sprintf("Unexpected character: %c", c))
 			}
 			break
 	}
@@ -201,7 +201,7 @@ func (sc * Scanner) scanString() {
 		sc.advance()
 	}
 	if sc.isAtEnd() {
-		parseerror.Error(sc.line, "Unterminated string")
+		handleError(sc.line, "Unterminated string")
 		return
 	}
 	// The closing "
@@ -209,6 +209,10 @@ func (sc * Scanner) scanString() {
 	// Trim surrounding quotes
 	value := sc.source[sc.start+1 : sc.current-1]
 	sc.addTokenWithLiteral(token.STRING, value)
+}
+
+func handleError(line int, message string) {
+	fmt.Printf("[Line %v] Error: %v\n", line, message)
 }
 
 func isDigit(c byte) bool {
