@@ -129,11 +129,14 @@ func (sc *Scanner) scanToken() (byte) {
 		case '\n':
 			sc.line++
 			break
+		case '"':
+			sc.scanString()
+			break
 		default:
 			if isDigit(c) {
 				sc.scanNumber()
 			} else if isAlpha(c) {
-
+				sc.scanIdentifier()
 			} else {
 				parseerror.Error(sc.line, fmt.Sprintf("Unexpected character: %c", c))
 			}
