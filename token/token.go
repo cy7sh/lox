@@ -57,10 +57,8 @@ const (
 type Token struct {
 	Type Type
 	Lexeme string
-	Literal string
+	Literal interface{}
 	Line int
 }
 
 func (token *Token) String() string {
-	return fmt.Sprintf("%v %v %v", token.Type, token.Lexeme, token.Literal)
-}

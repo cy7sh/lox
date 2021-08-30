@@ -32,8 +32,7 @@ func (sc *Scanner) ScanTokens() ([]token.Token) {
 }
 
 func (sc *Scanner) scanToken() (byte) {
-	c := sc.source[sc.current]
-	sc.current++
+	c := sc.advance()
 	switch (c) {
 		case '(':
 			sc.addToken(token.LEFT_PAREN)
@@ -71,33 +70,83 @@ func (sc *Scanner) scanToken() (byte) {
 			} else {
 				sc.addToken(token.BANG)
 			}
+			break
 		case '=':
 			if sc.match('=') {
 				sc.addToken(token.EQUAL_EQUAL)
 			} else {
 				sc.addToken(token.EQUAL)
 			}
+			break
 		case '<':
 			if sc.match('=') {
 				sc.addToken(token.LESS_EQUAL)
 			} else {
 				sc.addToken(token.LESS)
 			}
+			break
 		case '>':
 			if sc.match('=') {
 				sc.addToken(token.GREATER_EQUAL)
 			} else {
 				sc.addToken(token.GREATER)
 			}
+			break
+		case '/':
+			if sc.match('/') {
+				// a commment goes until the end of the line
+				for (sc.peek() != '\n' && !sc.isAtEnd()) {
+					sc.advance()
+				}
+			}
+			break
+		case ' ':
+		case '\r':
+		case '\t':
+			// Ignore whitespace
+			break;
+		case '\n':
+			sc.line++
+			break
 		default:
 			parseerror.HadError = true
 			parseerror.Error(sc.line, fmt.Sprintf("Unexpected character: %c", c))
+			break
 	}
 	return c
 }
 
-func (sc *Scanner) addToken(Type token.Type) {
-	sc.tokens = append(sc.tokens, token.Token{Type: Type})
+func (sc * Scanner) scanString() {
+	for (sc.peek() != '"' && !sc.isAtEnd()) {
+		if (sc.peek() == '\n') {
+			sc.line++
+		}
+		sc.advance()
+	}
+	if sc.isAtEnd() {
+		parseerror.Error(sc.line, "Unterminated string")
+		return
+	}
+	// The closing "
+	sc.advance()
+	// Trim surrounding quotes
+	value := sc.source[sc.start+1 : sc.current-1]
+	sc.addTokenWithLiteral(token.STRING, value)
+}
+
+func (sc *Scanner) advance() byte {
+	c := sc.source[sc.current]
+	sc.current++
+	return c
+}
+
+func (sc *Scanner) addToken(tokenType token.Type) {
+	sc.addTokenWithLiteral(tokenType, nil)
+}
+
+func (sc *Scanner) addTokenWithLiteral(tokenType token.Type, literal interface{}) {
+	text := sc.source[sc.start:sc.current]
+	sc.tokens = append(sc.tokens, token.Token{Type:tokenType, Lexeme: text, Literal: literal, Line: sc.line})
 }
 
 func (sc *Scanner) isAtEnd() bool {
@@ -113,4 +162,11 @@ func (sc *Scanner) match(expected byte) bool {
 	}
 	sc.current++
 	return true
+}
+
+func (sc *Scanner) peek() byte {
+	if sc.isAtEnd() {
+		return 0x00
+	}
+	return sc.source[sc.current]
 }
