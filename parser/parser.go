@@ -104,6 +104,28 @@ func (p *Parser) primary() ast.Expr {
 	return nil
 }
 
+func (p *Parser) synchronize() {
+	p.advance()
+
+	for !p.isAtEnd() {
+		if p.previous().Type == token.SEMICOLON {
+			return
+		}
+		switch(p.peek().Type) {
+		case token.CLASS:
+		case token.FUN:
+		case token.VAR:
+		case token.FOR:
+		case token.IF:
+		case token.WHILE:
+		case token.PRINT:
+		case token.RETURN:
+			return
+		}
+		p.advance()
+	}
+}
+
 func (p *Parser) handleError(tk token.Token, message string) {
 	p.HadError = true
 	if tk.Type == token.EOF {
@@ -111,6 +133,7 @@ func (p *Parser) handleError(tk token.Token, message string) {
 	} else {
 		fmt.Printf("[Line %v] Error at %v: %v\n", tk.Line, tk.Lexeme, message)
 	}
+	p.synchronize()
 }
 
 func (p *Parser) consume(tokenType token.Type, message string) {
