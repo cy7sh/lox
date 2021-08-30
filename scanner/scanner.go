@@ -129,7 +129,7 @@ func (sc *Scanner) scanToken() (byte) {
 				}
 				// unterminated comment
 				if sc.isAtEnd() {
-					handleError(sc.line, "Unterminated block comment")
+					sc.handleError(sc.line, "Unterminated block comment")
 				} else {
 					// consume * and /
 					sc.advance()
@@ -154,7 +154,7 @@ func (sc *Scanner) scanToken() (byte) {
 			} else if isAlpha(c) {
 				sc.scanIdentifier()
 			} else {
-				handleError(sc.line, fmt.Sprintf("Unexpected character: %c", c))
+				sc.handleError(sc.line, fmt.Sprintf("Unexpected character: %c", c))
 			}
 			break
 	}
@@ -201,7 +201,7 @@ func (sc * Scanner) scanString() {
 		sc.advance()
 	}
 	if sc.isAtEnd() {
-		handleError(sc.line, "Unterminated string")
+		sc.handleError(sc.line, "Unterminated string")
 		return
 	}
 	// The closing "
@@ -211,7 +211,8 @@ func (sc * Scanner) scanString() {
 	sc.addTokenWithLiteral(token.STRING, value)
 }
 
-func handleError(line int, message string) {
+func (sc *Scanner) handleError(line int, message string) {
+	sc.HadError = true
 	fmt.Printf("[Line %v] Error: %v\n", line, message)
 }
 

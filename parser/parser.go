@@ -1,10 +1,9 @@
 package parser
 
 import (
-	"os"
+	"fmt"
 
 	"github.com/singurty/lox/ast"
-	"github.com/singurty/lox/parseerror"
 	"github.com/singurty/lox/token"
 )
 
@@ -23,6 +22,7 @@ primary        → NUMBER | STRING | "true" | "false" | "nil"
 type Parser struct {
 	tokens []token.Token
 	current int
+	HadError bool
 }
 
 func New(tokens []token.Token) Parser {
@@ -104,13 +104,21 @@ func (p *Parser) primary() ast.Expr {
 	return nil
 }
 
+func (p *Parser) handleError(tk token.Token, message string) {
+	p.HadError = true
+	if tk.Type == token.EOF {
+		fmt.Printf("[Line %v] Error at end: %v\n", tk.Line, message)
+	} else {
+		fmt.Printf("[Line %v] Error at %v: %v\n", tk.Line, tk.Lexeme, message)
+	}
+}
+
 func (p *Parser) consume(tokenType token.Type, message string) {
 	if p.check(tokenType) {
 		p.advance()
 		return
 	}
-	parseerror.Error(p.peek().Line, message)
-	os.Exit(1)
+	p.handleError(p.peek(), message)
 }
 
 func (p *Parser) match(types ...token.Type) bool {
