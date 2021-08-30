@@ -119,6 +119,22 @@ func (sc *Scanner) scanToken() (byte) {
 				for (sc.peek() != '\n' && !sc.isAtEnd()) {
 					sc.advance()
 				}
+			} else if sc.match('*') {
+				// block comment goes ultil */
+				for (sc.peek() != '*' && sc.peekNext() != '/' && !sc.isAtEnd()) {
+					if sc.peek() == '\n' {
+						sc.line++
+					}
+					sc.advance()
+				}
+				// unterminated comment
+				if sc.isAtEnd() {
+					parseerror.Error(sc.line, "Unterminated block comment")
+				} else {
+					// consume * and /
+					sc.advance()
+					sc.advance()
+				}
 			}
 			break
 		case ' ':
