@@ -48,7 +48,7 @@ func (sc *Scanner) ScanTokens() ([]token.Token) {
 		sc.start = sc.current
 		sc.scanToken()
 	}
-	sc.addToken(token.EOF)
+	sc.tokens = append(sc.tokens, token.Token{Type: token.EOF})
 	return sc.tokens
 }
 
