@@ -26,7 +26,7 @@ var keywords = map[string]token.Type {
 	"for":		token.FOR,
 	"fun":		token.FUN,
 	"if":		token.IF,
-	"nil":		token.NIL,
+	"null":		token.NULL,
 	"or":		token.OR,
 	"print":	token.PRINT,
 	"return":	token.RETURN,

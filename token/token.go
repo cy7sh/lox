@@ -41,7 +41,7 @@ const (
 	FUN					// 26
 	FOR					// 27
 	IF					// 28
-	NIL					// 29
+	NULL				// 29
 	OR					// 30
 	PRINT				// 31
 	RETURN				// 32
