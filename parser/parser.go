@@ -60,7 +60,6 @@ func (p *Parser) comparison() ast.Expr {
 func (p *Parser) term() ast.Expr {
 	expr := p.factor()
 	for p.match(token.MINUS, token.PLUS) {
-		fmt.Println("found term")
 		operator := p.previous()
 		right := p.factor()
 		expr = &ast.Binary{Left: expr, Operator: operator, Right: right}
@@ -80,7 +79,6 @@ func (p *Parser) factor() ast.Expr {
 
 func (p *Parser) unary() ast.Expr {
 	if p.match(token.BANG, token.MINUS) {
-		fmt.Println("found unary")
 		operator := p.previous()
 		right := p.unary()
 		expr := &ast.Unary{Operator: operator, Right: right}

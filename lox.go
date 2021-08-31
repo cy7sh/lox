@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"log"
 	"os"
 
 	"github.com/singurty/lox/interpreter"
@@ -35,7 +36,10 @@ func runPrompt() {
 		} else if err != nil {
 			panic(err)
 		}
-		run(text)
+		err = run(text)
+		if err != nil {
+			fmt.Printf(err.Error())
+		}
 		hadError = false
 	}
 }
@@ -45,14 +49,17 @@ func runFile(file string) {
 	if err != nil {
 		panic(err)
 	}
-	run(string(content))
+	err = run(string(content))
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 }
 
-func run(source string) {
+func run(source string) error {
 	scanner := scanner.New(source)
 	tokens := scanner.ScanTokens()
 	if scanner.HadError {
-		return
+		return nil
 	}
 	//for _, token := range tokens{
 	//	fmt.Println(token.String())
@@ -60,9 +67,13 @@ func run(source string) {
 	parser := parser.New(tokens)
 	expression := parser.Parse()
 	if parser.HadError {
-		return
+		return nil
 	}
 	fmt.Println(expression.String())
-	interpreted := interpreter.Eval(expression)
+	interpreted, err := interpreter.Eval(expression)
+	if err != nil {
+		return err
+	}
 	fmt.Println(interpreted)
+	return nil
 }
