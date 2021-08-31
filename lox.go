@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/singurty/lox/interpreter"
 	"github.com/singurty/lox/parser"
 	"github.com/singurty/lox/scanner"
 )
@@ -56,4 +57,6 @@ func run(source string) {
 	parser := parser.New(tokens)
 	expression := parser.Parse()
 	fmt.Println(expression.String())
+	interpreted := interpreter.Eval(expression)
+	fmt.Println(interpreted)
 }
