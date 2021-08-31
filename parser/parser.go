@@ -29,6 +29,10 @@ func New(tokens []token.Token) Parser {
 	return Parser{tokens: tokens, current: 0}
 }
 
+func (p *Parser) Parse() ast.Expr {
+	return p.expression()
+}
+
 func (p *Parser) expression() ast.Expr {
 	return p.equality()
 }
@@ -101,6 +105,7 @@ func (p *Parser) primary() ast.Expr {
 		p.consume(token.RIGHT_PAREN, "Expected ')' after expression.")
 		return &ast.Grouping{Expression: expr}
 	}
+	p.handleError(p.peek(), "Expected expression.")
 	return nil
 }
 

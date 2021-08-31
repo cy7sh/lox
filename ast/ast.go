@@ -29,6 +29,7 @@ func (b *Binary) String() string {
 	sb.WriteString(b.Left.String())
 	sb.WriteString(" ")
 	sb.WriteString(b.Right.String())
+	sb.WriteString(")")
 	return sb.String()
 }
 

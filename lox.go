@@ -1,13 +1,16 @@
 package main
 
 import (
-	"os"
 	"bufio"
 	"fmt"
 	"io"
+	"os"
+
+	"github.com/singurty/lox/parser"
 	"github.com/singurty/lox/scanner"
-	"github.com/singurty/lox/parseerror"
 )
+
+var hadError bool
 
 func main() {
 	if len(os.Args) > 2 {
@@ -32,7 +35,7 @@ func runPrompt() {
 			panic(err)
 		}
 		run(text)
-		parseerror.HadError = false
+		hadError = false
 	}
 }
 
@@ -47,7 +50,10 @@ func runFile(file string) {
 func run(source string) {
 	scanner := scanner.New(source)
 	tokens := scanner.ScanTokens()
-	for _, token := range tokens{
-		fmt.Println(token.String())
-	}
+	//for _, token := range tokens{
+	//	fmt.Println(token.String())
+	//}
+	parser := parser.New(tokens)
+	expression := parser.Parse()
+	fmt.Println(expression.String())
 }
