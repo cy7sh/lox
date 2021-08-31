@@ -13,14 +13,30 @@ type RuntimeError struct {
 	message string
 }
 
-func Eval(node ast.Expr) (interface{}, error) {
+func Interpret(statements []ast.Stmt) error {
+	for _, statement := range statements {
+		switch s := statement.(type) {
+		case *ast.PrintStmt:
+			value, err := evaluate(s.Expression)
+			if err != nil {
+				return err
+			}
+			fmt.Println(value)
+		case *ast.ExprStmt:
+			evaluate(s.Expression)
+		}
+	}
+	return nil
+}
+
+func evaluate(node ast.Expr) (interface{}, error) {
 	switch n := node.(type) {
 		case *ast.Literal:
 			return n.Value, nil
 		case *ast.Grouping:
-			return Eval(n.Expression)
+			return evaluate(n.Expression)
 		case *ast.Unary:
-			right, err := Eval(n.Right)
+			right, err := evaluate(n.Right)
 			if err != nil {
 				return nil, err
 			}
@@ -35,11 +51,11 @@ func Eval(node ast.Expr) (interface{}, error) {
 				return !isTrue(right), nil
 			}
 		case *ast.Binary:
-			left, err := Eval(n.Left)
+			left, err := evaluate(n.Left)
 			if err != nil {
 				return nil, err
 			}
-			right, err := Eval(n.Right)
+			right, err := evaluate(n.Right)
 			if err != nil {
 				return nil, err
 			}
@@ -109,17 +125,17 @@ func Eval(node ast.Expr) (interface{}, error) {
 					return !isEqual(left, right), nil
 			}
 		case *ast.Ternary:
-			conditon, err := Eval(n.Condition)
+			conditon, err := evaluate(n.Condition)
 			if err != nil {
 				return nil, err
 			}
 			if isTrue(conditon) {
-				return Eval(n.Then)
+				return evaluate(n.Then)
 			} else {
-				return Eval(n.Else)
+				return evaluate(n.Else)
 			}
 	}
-	return nil, &RuntimeError{message: "Error evaluating expression"}
+	return nil, &RuntimeError{message: "Error evaluateuating expression"}
 }
 
 func (err *RuntimeError) Error() string {

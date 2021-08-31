@@ -7,8 +7,6 @@ import (
 	"github.com/singurty/lox/token"
 )
 
-
-// root class of expression nodes
 type Expr interface {
 	String() string
 }
@@ -83,4 +81,15 @@ func (u *Unary) String() string {
 	sb.WriteString(u.Operator.Lexeme)
 	sb.WriteString(u.Right.String())
 	return sb.String()
+}
+
+type Stmt interface {
+}
+
+type ExprStmt struct {
+	Expression Expr
+}
+
+type PrintStmt struct {
+	Expression Expr
 }

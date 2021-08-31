@@ -8,6 +8,10 @@ import (
 )
 
 /*
+program        → statement* EOF
+statement      → exprStmt | printStmt
+exprStmt       → expression ";"
+printStmt      → "print" expression ";"
 expression     → ternary
 ternary        → equality ? equality : equality
 equality       → comparison ( ( "!=" | "==" ) comparison )*
@@ -28,8 +32,23 @@ func New(tokens []token.Token) Parser {
 	return Parser{tokens: tokens, current: 0}
 }
 
-func (p *Parser) Parse() ast.Expr {
-	return p.expression()
+func (p *Parser) Parse() []ast.Stmt {
+	var statements []ast.Stmt
+	for !p.isAtEnd() {
+		statements = append(statements, p.statement())
+	}
+	return statements
+}
+
+func (p *Parser) statement() ast.Stmt {
+	if p.match(token.PRINT) {
+		expr := p.expression()
+		p.consume(token.SEMICOLON, "Expected \";\" after expression")
+		return &ast.PrintStmt{Expression: expr}
+	}
+	expr := p.expression()
+	p.consume(token.SEMICOLON, "Expected \";\" after expression")
+	return &ast.ExprStmt{Expression: expr}
 }
 
 func (p *Parser) expression() ast.Expr {

@@ -66,15 +66,14 @@ func run(source string) error {
 	//	fmt.Println(token.String())
 	//}
 	parser := parser.New(tokens)
-	expression := parser.Parse()
+	statements := parser.Parse()
 	if parser.HadError {
 		return errors.New("parser error")
 	}
 //	fmt.Println(expression.String())
-	interpreted, err := interpreter.Eval(expression)
+	err := interpreter.Interpret(statements)
 	if err != nil {
 		return err
 	}
-	fmt.Println(interpreted)
 	return nil
 }
