@@ -51,11 +51,17 @@ func runFile(file string) {
 func run(source string) {
 	scanner := scanner.New(source)
 	tokens := scanner.ScanTokens()
+	if scanner.HadError {
+		return
+	}
 	//for _, token := range tokens{
 	//	fmt.Println(token.String())
 	//}
 	parser := parser.New(tokens)
 	expression := parser.Parse()
+	if parser.HadError {
+		return
+	}
 	fmt.Println(expression.String())
 	interpreted := interpreter.Eval(expression)
 	fmt.Println(interpreted)

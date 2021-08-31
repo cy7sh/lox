@@ -135,6 +135,8 @@ func (sc *Scanner) scanToken() (byte) {
 					sc.advance()
 					sc.advance()
 				}
+			} else {
+				sc.addToken(token.SLASH)
 			}
 			break
 		case ' ':
@@ -189,8 +191,12 @@ func (sc *Scanner) scanNumber() {
 			sc.advance()
 		}
 	}
+	number, err := strconv.ParseFloat(sc.source[sc.start:sc.current], 64)
+	if err != nil {
+		sc.handleError(sc.line, "Invalid number")
+	}
 	// Parse as float
-	sc.addTokenWithLiteral(token.NUMBER, sc.source[sc.start:sc.current])
+	sc.addTokenWithLiteral(token.NUMBER, number)
 }
 
 func (sc * Scanner) scanString() {

@@ -71,7 +71,7 @@ func (p *Parser) factor() ast.Expr {
 	expr := p.unary()
 	for p.match(token.SLASH, token.STAR) {
 		operator := p.previous()
-		right := p.factor()
+		right := p.unary()
 		expr = &ast.Binary{Left: expr, Operator: operator, Right: right}
 	}
 	return expr
