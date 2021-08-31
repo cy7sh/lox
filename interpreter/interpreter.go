@@ -55,6 +55,9 @@ func Eval(node ast.Expr) (interface{}, error) {
 					if err != nil {
 						return nil, err
 					}
+					if right.(float64) == 0 {
+						return nil, &RuntimeError{line: n.Operator.Line, where: n.Operator.Lexeme, message: "Divide by zero"}
+					}
 					return left.(float64) / right.(float64), nil
 				case token.STAR:
 					err := checkNumberOperands(n.Operator, right, left)
@@ -100,7 +103,7 @@ func Eval(node ast.Expr) (interface{}, error) {
 						return nil, err
 					}
 					return left.(float64) <= right.(float64), nil
-				case token.EQUAL:
+				case token.EQUAL_EQUAL:
 					return isEqual(left, right), nil
 				case token.BANG_EQUAL:
 					return !isEqual(left, right), nil
@@ -111,9 +114,9 @@ func Eval(node ast.Expr) (interface{}, error) {
 
 func (err *RuntimeError) Error() string {
 	if err.where == "" {
-		return fmt.Sprintf("[Line %v] RuntimeError: %v\n", err.line, err.message)
+		return fmt.Sprintf("[Line %v] RuntimeError: %v", err.line, err.message)
 	}
-	return fmt.Sprintf("[Line %v] RuntimeError at \"%v\": %v\n", err.line, err.where, err.message)
+	return fmt.Sprintf("[Line %v] RuntimeError at \"%v\": %v", err.line, err.where, err.message)
 }
 
 func checkNumberOperand(operator token.Token, operand interface{}) error {

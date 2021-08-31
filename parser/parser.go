@@ -49,7 +49,7 @@ func (p *Parser) equality() ast.Expr {
 
 func (p *Parser) comparison() ast.Expr {
 	expr := p.term()
-	for p.match(token.GREATER, token.GREATER_EQUAL, token.LESS, token.LESS_EQUAL) {
+	for p.match(token.GREATER, token.GREATER_EQUAL, token.LESS, token.LESS_EQUAL, token.EQUAL_EQUAL) {
 		operator := p.previous()
 		right := p.term()
 		expr = &ast.Binary{Left: expr, Operator: operator, Right: right}
@@ -169,8 +169,9 @@ func (p *Parser) check(tokenType token.Type) bool {
 func (p *Parser) advance() token.Token {
 	if !p.isAtEnd() {
 		p.current++
+		return p.previous()
 	}
-	return p.previous()
+	return p.tokens[p.current]
 }
 
 func (p *Parser) isAtEnd() bool {

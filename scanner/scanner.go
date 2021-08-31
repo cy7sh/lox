@@ -82,6 +82,10 @@ func (sc *Scanner) scanToken() (byte) {
 		case ';':
 			sc.addToken(token.SEMICOLON)
 			break
+		case ':':
+			sc.addToken(token.COLON)
+		case '?':
+			sc.addToken(token.QUESTION_MARK)
 		case '*':
 			sc.addToken(token.STAR)
 			break

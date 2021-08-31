@@ -39,7 +39,7 @@ func runPrompt() {
 		}
 		err = run(text)
 		if err != nil {
-			fmt.Printf(err.Error())
+			fmt.Println(err.Error())
 		}
 		hadError = false
 	}
@@ -70,7 +70,7 @@ func run(source string) error {
 	if parser.HadError {
 		return errors.New("parser error")
 	}
-	fmt.Println(expression.String())
+//	fmt.Println(expression.String())
 	interpreted, err := interpreter.Eval(expression)
 	if err != nil {
 		return err
