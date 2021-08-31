@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"errors"
 
 	"github.com/singurty/lox/interpreter"
 	"github.com/singurty/lox/parser"
@@ -59,7 +60,7 @@ func run(source string) error {
 	scanner := scanner.New(source)
 	tokens := scanner.ScanTokens()
 	if scanner.HadError {
-		return nil
+		return errors.New("scanner error")
 	}
 	//for _, token := range tokens{
 	//	fmt.Println(token.String())
@@ -67,7 +68,7 @@ func run(source string) error {
 	parser := parser.New(tokens)
 	expression := parser.Parse()
 	if parser.HadError {
-		return nil
+		return errors.New("parser error")
 	}
 	fmt.Println(expression.String())
 	interpreted, err := interpreter.Eval(expression)
