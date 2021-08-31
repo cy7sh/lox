@@ -108,6 +108,16 @@ func Eval(node ast.Expr) (interface{}, error) {
 				case token.BANG_EQUAL:
 					return !isEqual(left, right), nil
 			}
+		case *ast.Ternary:
+			conditon, err := Eval(n.Condition)
+			if err != nil {
+				return nil, err
+			}
+			if isTrue(conditon) {
+				return Eval(n.Then)
+			} else {
+				return Eval(n.Else)
+			}
 	}
 	return nil, &RuntimeError{message: "Error evaluating expression"}
 }

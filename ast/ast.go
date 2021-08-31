@@ -13,6 +13,24 @@ type Expr interface {
 	String() string
 }
 
+type Ternary struct {
+	Condition Expr
+	Then Expr
+	Else Expr
+}
+
+func (t *Ternary) String() string {
+	var sb strings.Builder
+	sb.WriteString("if (")
+	sb.WriteString(t.Condition.String())
+	sb.WriteString(") then (")
+	sb.WriteString(t.Then.String())
+	sb.WriteString(") else (")
+	sb.WriteString(t.Else.String())
+	sb.WriteString(")")
+	return sb.String()
+}
+
 type Binary struct {
 	Left Expr
 	Operator token.Token

@@ -8,15 +8,14 @@ import (
 )
 
 /*
-expression     → equality ;
-equality       → comparison ( ( "!=" | "==" ) comparison )* ;
-comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
-term           → factor ( ( "-" | "+" ) factor )* ;
-factor         → unary ( ( "/" | "*" ) unary )* ;
-unary          → ( "!" | "-" ) unary
-               | primary ;
-primary        → NUMBER | STRING | "true" | "false" | "nil"
-               | "(" expression ")" ;
+expression     → ternary
+ternary        → equality ? equality : equality
+equality       → comparison ( ( "!=" | "==" ) comparison )*
+comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )*
+term           → factor ( ( "-" | "+" ) factor )*
+factor         → unary ( ( "/" | "*" ) unary )*
+unary          → ( "!" | "-" ) unary | primary
+primary        → NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")"
 */
 
 type Parser struct {
@@ -34,7 +33,21 @@ func (p *Parser) Parse() ast.Expr {
 }
 
 func (p *Parser) expression() ast.Expr {
-	return p.equality()
+	return p.ternary()
+}
+
+func (p *Parser) ternary() ast.Expr {
+	expr := p.equality()
+	if p.match(token.QUESTION_MARK) {
+		thenExpr := p.equality()
+		if p.match(token.COLON) {
+			elseExpr := p.equality()
+			expr = &ast.Ternary{Condition: expr, Then: thenExpr, Else: elseExpr}
+		} else {
+			p.handleError(p.peek(), "Unterminated ternary operator")
+		}
+	}
+	return expr
 }
 
 func (p *Parser) equality() ast.Expr {

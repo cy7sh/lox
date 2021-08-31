@@ -6,52 +6,54 @@ type Type int
 
 const (
 	// Single-character tokens
-	LEFT_PAREN = iota	// 0
-	RIGHT_PAREN			// 1
-	LEFT_BRACE			// 2
-	RIGHT_BRACE			// 3
-	COMMA				// 4
-	DOT					// 5
-	MINUS				// 6
-	PLUS				// 7
-	SEMICOLON			// 8
-	SLASH				// 9
-	STAR				// 10
+	LEFT_PAREN = iota
+	RIGHT_PAREN
+	LEFT_BRACE
+	RIGHT_BRACE
+	COMMA
+	DOT
+	MINUS
+	PLUS
+	SEMICOLON
+	SLASH
+	STAR
+	QUESTION_MARK
+	COLON
 
 	// One or two character tokens
-	BANG				// 11
-	BANG_EQUAL			// 12
-	EQUAL				// 13
-	EQUAL_EQUAL			// 14
-	GREATER				// 15
-	GREATER_EQUAL		// 16
-	LESS				// 17
-	LESS_EQUAL			// 18
+	BANG
+	BANG_EQUAL
+	EQUAL
+	EQUAL_EQUAL
+	GREATER
+	GREATER_EQUAL
+	LESS
+	LESS_EQUAL
 
 	// Literals
-	IDENTIFIER			// 19
-	STRING				// 20
-	NUMBER				// 21
+	IDENTIFIER
+	STRING
+	NUMBER
 
 	// Keywords
-	AND					// 22
-	CLASS				// 23
-	ELSE				// 24
-	FALSE				// 25
-	FUN					// 26
-	FOR					// 27
-	IF					// 28
-	NULL				// 29
-	OR					// 30
-	PRINT				// 31
-	RETURN				// 32
-	SUPER				// 33
-	THIS				// 34
-	TRUE				// 35
-	VAR					// 36
-	WHILE				// 37
+	AND
+	CLASS
+	ELSE
+	FALSE
+	FUN
+	FOR
+	IF
+	NULL
+	OR
+	PRINT
+	RETURN
+	SUPER
+	THIS
+	TRUE
+	VAR
+	WHILE
 
-	EOF					// 38
+	EOF
 )
 
 type Token struct {
