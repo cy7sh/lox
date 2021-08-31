@@ -8,6 +8,7 @@ import (
 )
 
 type RuntimeError struct {
+	line int
 	where string
 	message string
 }
@@ -74,7 +75,7 @@ func Eval(node ast.Expr) (interface{}, error) {
 								return l + r, nil
 							}
 					}
-					return nil, &RuntimeError{where: n.Operator.Lexeme, message: "Operands must be eithier numbers or strings"}
+					return nil, &RuntimeError{line: n.Operator.Line, where: n.Operator.Lexeme, message: "Operands must be eithier numbers or strings"}
 				case token.GREATER:
 					err := checkNumberOperands(n.Operator, right, left)
 					if err != nil {
@@ -110,15 +111,15 @@ func Eval(node ast.Expr) (interface{}, error) {
 
 func (err *RuntimeError) Error() string {
 	if err.where == "" {
-		return fmt.Sprintf("RuntimeError: %v\n", err.message)
+		return fmt.Sprintf("[Line %v] RuntimeError: %v\n", err.line, err.message)
 	}
-	return fmt.Sprintf("RuntimeError: At %v: %v\n", err.where, err.message)
+	return fmt.Sprintf("[Line %v] RuntimeError at \"%v\": %v\n", err.line, err.where, err.message)
 }
 
 func checkNumberOperand(operator token.Token, operand interface{}) error {
 	_, ok := operand.(float64)
 	if !ok {
-		return &RuntimeError{where: operator.Lexeme, message: "Operand must be a number"}
+		return &RuntimeError{line: operator.Line, where: operator.Lexeme, message: "Operand must be a number"}
 	}
 	return nil
 }
@@ -126,11 +127,11 @@ func checkNumberOperand(operator token.Token, operand interface{}) error {
 func checkNumberOperands(operator token.Token, operand1, operand2 interface{}) error {
 	_, ok := operand1.(float64)
 	if !ok {
-		return &RuntimeError{where: operator.Lexeme, message:"Operand must be a number"}
+		return &RuntimeError{line: operator.Line, where: operator.Lexeme, message:"Operand must be a number"}
 	}
 	_, ok = operand2.(float64)
 	if !ok {
-		return &RuntimeError{where: operator.Lexeme, message:"Operand must be a number"}
+		return &RuntimeError{line: operator.Line, where: operator.Lexeme, message:"Operand must be a number"}
 	}
 	return nil
 }
