@@ -14,7 +14,6 @@ type Expr interface {
 }
 
 type Binary struct {
-	Expr
 	Left Expr
 	Operator token.Token
 	Right Expr
@@ -35,7 +34,6 @@ func (b *Binary) String() string {
 
 // for parenthesized expressions
 type Grouping struct {
-	Expr
 	Expression Expr
 }
 
@@ -48,7 +46,6 @@ func (g *Grouping) String() string {
 }
 
 type Literal struct {
-	Expr
 	Value interface{}
 }
 
@@ -59,7 +56,6 @@ func (l *Literal) String() string {
 }
 
 type Unary struct {
-	Expr
 	Operator token.Token
 	Right Expr
 }
