@@ -93,3 +93,16 @@ type ExprStmt struct {
 type PrintStmt struct {
 	Expression Expr
 }
+
+type Var struct {
+	Name token.Token
+	Initializer Expr
+}
+
+type Variable struct {
+	Name token.Token
+}
+
+func (v *Variable) String() string {
+	return v.Name.Lexeme
+}

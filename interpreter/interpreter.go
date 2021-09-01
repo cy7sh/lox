@@ -7,6 +7,9 @@ import (
 	"github.com/singurty/lox/token"
 )
 
+// keep tracks of variables
+var enviornment = make(map[string]interface{})
+
 type RuntimeError struct {
 	line int
 	where string
@@ -24,6 +27,16 @@ func Interpret(statements []ast.Stmt) error {
 			fmt.Println(value)
 		case *ast.ExprStmt:
 			evaluate(s.Expression)
+		case *ast.Var:
+			if s.Initializer == nil {
+				enviornment[s.Name.Lexeme] = nil
+			} else {
+				value, err := evaluate(s.Initializer)
+				if err != nil {
+					return err
+				}
+				enviornment[s.Name.Lexeme] = value
+			}
 		}
 	}
 	return nil
@@ -33,6 +46,12 @@ func evaluate(node ast.Expr) (interface{}, error) {
 	switch n := node.(type) {
 		case *ast.Literal:
 			return n.Value, nil
+		case *ast.Variable:
+			value, err := get(n.Name)
+			if err != nil {
+				return nil, err
+			}
+			return value, nil
 		case *ast.Grouping:
 			return evaluate(n.Expression)
 		case *ast.Unary:
@@ -143,6 +162,15 @@ func (err *RuntimeError) Error() string {
 		return fmt.Sprintf("[Line %v] RuntimeError: %v", err.line, err.message)
 	}
 	return fmt.Sprintf("[Line %v] RuntimeError at \"%v\": %v", err.line, err.where, err.message)
+}
+
+func get(name token.Token) (interface{}, error) {
+	value, ok := enviornment[name.Lexeme]
+	if ok {
+		return value, nil
+	} else {
+		return nil, &RuntimeError{line: name.Line, message: "Undefined variable \"" + name.Lexeme + "\""}
+	}
 }
 
 func checkNumberOperand(operator token.Token, operand interface{}) error {

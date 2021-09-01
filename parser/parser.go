@@ -8,7 +8,9 @@ import (
 )
 
 /*
-program        → statement* EOF
+program        → declaration* EOF
+declaration    → varCecl | statement
+varDecl        → "var" IDENTIFIER ("=" expression)? ";"
 statement      → exprStmt | printStmt
 exprStmt       → expression ";"
 printStmt      → "print" expression ";"
@@ -19,7 +21,7 @@ comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )*
 term           → factor ( ( "-" | "+" ) factor )*
 factor         → unary ( ( "/" | "*" ) unary )*
 unary          → ( "!" | "-" ) unary | primary
-primary        → NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")"
+primary        → NUMBER | STRING | IDENTIFIER | "true" | "false" | "nil" | "(" expression ")"
 */
 
 type Parser struct {
@@ -35,9 +37,22 @@ func New(tokens []token.Token) Parser {
 func (p *Parser) Parse() []ast.Stmt {
 	var statements []ast.Stmt
 	for !p.isAtEnd() {
-		statements = append(statements, p.statement())
+		statements = append(statements, p.declaration())
 	}
 	return statements
+}
+
+func (p *Parser) declaration() ast.Stmt {
+	if p.match(token.VAR) {
+		name := p.consume(token.IDENTIFIER, "Expected variable name")
+		var initializer ast.Expr
+		if p.match(token.EQUAL) {
+			initializer = p.expression()
+		}
+		p.consume(token.SEMICOLON, "Expected \";\" after variable declaration")
+		return &ast.Var{Name: name, Initializer: initializer}
+	}
+	return p.statement()
 }
 
 func (p *Parser) statement() ast.Stmt {
@@ -132,6 +147,9 @@ func (p *Parser) primary() ast.Expr {
 	if p.match(token.NUMBER, token.STRING) {
 		return &ast.Literal{Value: p.previous().Literal}
 	}
+	if p.match(token.IDENTIFIER) {
+		return &ast.Variable{Name:p.previous()}
+	}
 	if p.match(token.LEFT_PAREN) {
 		expr := p.expression()
 		p.consume(token.RIGHT_PAREN, "Expected ')' after expression.")
@@ -173,12 +191,12 @@ func (p *Parser) handleError(tk token.Token, message string) {
 	p.synchronize()
 }
 
-func (p *Parser) consume(tokenType token.Type, message string) {
+func (p *Parser) consume(tokenType token.Type, message string) token.Token {
 	if p.check(tokenType) {
-		p.advance()
-		return
+		return p.advance()
 	}
 	p.handleError(p.peek(), message)
+	return token.Token{}
 }
 
 func (p *Parser) match(types ...token.Type) bool {
