@@ -26,7 +26,10 @@ func Interpret(statements []ast.Stmt) error {
 			}
 			fmt.Println(value)
 		case *ast.ExprStmt:
-			evaluate(s.Expression)
+			_, err := evaluate(s.Expression)
+			if err != nil {
+				return err
+			}
 		case *ast.Var:
 			if s.Initializer == nil {
 				enviornment[s.Name.Lexeme] = nil
@@ -52,6 +55,15 @@ func evaluate(node ast.Expr) (interface{}, error) {
 				return nil, err
 			}
 			return value, nil
+		case *ast.Assign:
+			_, ok := enviornment[n.Name.Lexeme]
+			if ok {
+				enviornment[n.Name.Lexeme] = n.Value
+				return enviornment[n.Name.Lexeme], nil
+			} else {
+				fmt.Println("doesnt exist")
+				return nil, &RuntimeError{n.Name.Line, n.Name.Lexeme, "Undefined variable"}
+			}
 		case *ast.Grouping:
 			return evaluate(n.Expression)
 		case *ast.Unary:

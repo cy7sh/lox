@@ -13,8 +13,6 @@ import (
 	"github.com/singurty/lox/scanner"
 )
 
-var hadError bool
-
 func main() {
 	if len(os.Args) > 2 {
 		fmt.Printf("Usage: %v [file]\n", os.Args[0])
@@ -41,7 +39,6 @@ func runPrompt() {
 		if err != nil {
 			fmt.Println(err.Error())
 		}
-		hadError = false
 	}
 }
 

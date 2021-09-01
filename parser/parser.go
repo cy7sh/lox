@@ -15,6 +15,7 @@ statement      → exprStmt | printStmt
 exprStmt       → expression ";"
 printStmt      → "print" expression ";"
 expression     → ternary
+assignment     → IDENTIFIER "=" assignment | ternary
 ternary        → equality ? equality : equality
 equality       → comparison ( ( "!=" | "==" ) comparison )*
 comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )*
@@ -67,7 +68,22 @@ func (p *Parser) statement() ast.Stmt {
 }
 
 func (p *Parser) expression() ast.Expr {
-	return p.ternary()
+	return p.assignment()
+}
+
+func (p *Parser) assignment() ast.Expr {
+	expr := p.ternary()
+	if p.match(token.EQUAL) {
+		equals := p.previous()
+		value := p.assignment()
+		switch e := expr.(type) {
+		case *ast.Variable:
+			name := e.Name
+			return &ast.Assign{Name: name, Value: value}
+		}
+		p.handleError(equals, "Invalid assignment target")
+	}
+	return expr
 }
 
 func (p *Parser) ternary() ast.Expr {

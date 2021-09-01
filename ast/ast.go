@@ -83,6 +83,19 @@ func (u *Unary) String() string {
 	return sb.String()
 }
 
+type Assign struct {
+	Name token.Token
+	Value Expr
+}
+
+func (a *Assign) String() string {
+	var sb strings.Builder
+	sb.WriteString(a.Name.Lexeme)
+	sb.WriteString(" = ")
+	sb.WriteString(a.Value.String())
+	return sb.String()
+}
+
 type Stmt interface {
 }
 
