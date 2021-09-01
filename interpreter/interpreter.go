@@ -5,10 +5,11 @@ import (
 
 	"github.com/singurty/lox/ast"
 	"github.com/singurty/lox/token"
+	"github.com/singurty/lox/environment"
 )
 
 // keep tracks of variables
-var enviornment = make(map[string]interface{})
+var env = environment.Global()
 
 type RuntimeError struct {
 	line int
@@ -32,13 +33,19 @@ func Interpret(statements []ast.Stmt) error {
 			}
 		case *ast.Var:
 			if s.Initializer == nil {
-				enviornment[s.Name.Lexeme] = nil
+				err := env.Define(s.Name.Lexeme, nil)
+				if err != nil {
+					return &RuntimeError{line: s.Name.Line, message:err.Error()}
+				}
 			} else {
 				value, err := evaluate(s.Initializer)
 				if err != nil {
 					return err
 				}
-				enviornment[s.Name.Lexeme] = value
+				err = env.Define(s.Name.Lexeme, value)
+				if err != nil {
+					return &RuntimeError{line: s.Name.Line, message:err.Error()}
+				}
 			}
 		}
 	}
@@ -50,24 +57,21 @@ func evaluate(node ast.Expr) (interface{}, error) {
 		case *ast.Literal:
 			return n.Value, nil
 		case *ast.Variable:
-			value, err := get(n.Name)
+			value, err := env.Get(n.Name.Lexeme)
 			if err != nil {
-				return nil, err
+				return nil, &RuntimeError{line: n.Name.Line, message: err.Error()}
 			}
 			return value, nil
 		case *ast.Assign:
-			_, ok := enviornment[n.Name.Lexeme]
-			if ok {
-				value, err := evaluate(n.Value)
-				if err != nil {
-					return nil, err
-				}
-				enviornment[n.Name.Lexeme] = value
-				return enviornment[n.Name.Lexeme], nil
-			} else {
-				fmt.Println("doesnt exist")
-				return nil, &RuntimeError{n.Name.Line, n.Name.Lexeme, "Undefined variable"}
+			value, err := evaluate(n.Value)
+			if err != nil {
+				return nil, err
 			}
+			err = env.Assign(n.Name.Lexeme, value)
+			if err != nil {
+				return nil, &RuntimeError{line: n.Name.Line, message: err.Error()}
+			}
+			return value, nil
 		case *ast.Grouping:
 			return evaluate(n.Expression)
 		case *ast.Unary:
@@ -170,7 +174,7 @@ func evaluate(node ast.Expr) (interface{}, error) {
 				return evaluate(n.Else)
 			}
 	}
-	return nil, &RuntimeError{message: "Error evaluateuating expression"}
+	return nil, &RuntimeError{message: "Error evaluating expression"}
 }
 
 func (err *RuntimeError) Error() string {
@@ -178,15 +182,6 @@ func (err *RuntimeError) Error() string {
 		return fmt.Sprintf("[Line %v] RuntimeError: %v", err.line, err.message)
 	}
 	return fmt.Sprintf("[Line %v] RuntimeError at \"%v\": %v", err.line, err.where, err.message)
-}
-
-func get(name token.Token) (interface{}, error) {
-	value, ok := enviornment[name.Lexeme]
-	if ok {
-		return value, nil
-	} else {
-		return nil, &RuntimeError{line: name.Line, message: "Undefined variable \"" + name.Lexeme + "\""}
-	}
 }
 
 func checkNumberOperand(operator token.Token, operand interface{}) error {
