@@ -58,7 +58,11 @@ func evaluate(node ast.Expr) (interface{}, error) {
 		case *ast.Assign:
 			_, ok := enviornment[n.Name.Lexeme]
 			if ok {
-				enviornment[n.Name.Lexeme] = n.Value
+				value, err := evaluate(n.Value)
+				if err != nil {
+					return nil, err
+				}
+				enviornment[n.Name.Lexeme] = value
 				return enviornment[n.Name.Lexeme], nil
 			} else {
 				fmt.Println("doesnt exist")
