@@ -25,12 +25,6 @@ type RuntimeError struct {
 	message string
 }
 
-//type Options struct {
-//	PrintOutput io.Writer
-//}
-//
-//var InterpreterOptions = &Options{PrintOutput: &strings.Builder{}}
-
 func Interpret(statements []ast.Stmt) error {
 	for _, statement := range statements {
 		err := execute(statement)
@@ -71,7 +65,10 @@ func execute(statement ast.Stmt) error {
 			}
 		}
 	case *ast.Block:
-		return executeBlock(s.Statements, environment.Local(env))
+		err := executeBlock(s.Statements, environment.Local(env))
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -80,7 +77,10 @@ func executeBlock(statements []ast.Stmt, environment *environment.Environment) e
 	previous := env
 	env = environment
 	for _, statement := range statements {
-		return execute(statement)
+		err := execute(statement)
+		if err != nil {
+			return err
+		}
 	}
 	env = previous
 	return nil

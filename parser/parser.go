@@ -8,11 +8,11 @@ import (
 )
 
 /*
-program        → declaration* EOF
-block          → "{" declaration* "}"
+program        → block* EOF
 declaration    → varDecl | statement
 varDecl        → "var" IDENTIFIER ("=" expression)? ";"
-statement      → exprStmt | printStmt
+statement      → exprStmt | printStmt | block
+block          → "{" declaration* "}"
 exprStmt       → expression ";"
 printStmt      → "print" expression ";"
 expression     → ternary

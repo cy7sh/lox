@@ -87,16 +87,16 @@ func TestVariableScope(t *testing.T) {
 		print b;
 		print c;
 	`
-	expected := `inner a
+	expected := `
+inner a
 outer b
 global c
 outer a
 outer b
 global c
-gloabl a
+global a
 global b
-global c
-	`
+global c`
 	testInterpreterOutput(input, expected, t)
 }
 
@@ -104,8 +104,9 @@ func testInterpreterOutput(input string, expected string, t *testing.T) {
 	sb :=  &strings.Builder{}
 	InterpreterOptions.PrintOutput = sb
 	runTest(input)
-	output := sb.String()
+	output := strings.Trim(sb.String(), "\n")
+	expected = strings.Trim(expected, "\n")
 	if output != expected {
-		t.Errorf("Expected output to be : %vGot: %v", expected, output)
+		t.Errorf("Expected output to be : %v\nGot: %v\n", expected, output)
 	}
 }
