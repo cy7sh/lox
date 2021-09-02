@@ -72,6 +72,11 @@ func (p *Parser) statement() ast.Stmt {
 		return &ast.Block{Statements: statements}
 	}
 	expr := p.expression()
+	if p.isAtEnd() {
+		p.current = 0
+		expr := p.expression()
+		return &ast.PrintStmt{Expression: expr}
+	}
 	p.consume(token.SEMICOLON, "Expected \";\" after expression")
 	return &ast.ExprStmt{Expression: expr}
 }
