@@ -2,20 +2,34 @@ package interpreter
 
 import (
 	"fmt"
+	"io"
+	"os"
 
 	"github.com/singurty/lox/ast"
-	"github.com/singurty/lox/token"
 	"github.com/singurty/lox/environment"
+	"github.com/singurty/lox/token"
 )
 
 // keep tracks of variables
 var env = environment.Global()
+
+type Options struct {
+	PrintOutput io.Writer
+}
+
+var InterpreterOptions = &Options{PrintOutput: os.Stdout}
 
 type RuntimeError struct {
 	line int
 	where string
 	message string
 }
+
+//type Options struct {
+//	PrintOutput io.Writer
+//}
+//
+//var InterpreterOptions = &Options{PrintOutput: &strings.Builder{}}
 
 func Interpret(statements []ast.Stmt) error {
 	for _, statement := range statements {
@@ -34,7 +48,7 @@ func execute(statement ast.Stmt) error {
 		if err != nil {
 			return err
 		}
-		fmt.Println(value)
+		fmt.Fprintln(InterpreterOptions.PrintOutput, value)
 	case *ast.ExprStmt:
 		_, err := evaluate(s.Expression)
 		if err != nil {

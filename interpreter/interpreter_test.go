@@ -1,17 +1,21 @@
 package interpreter
 
 import (
+	"strings"
 	"testing"
 
-	"github.com/singurty/lox/scanner"
+	"github.com/singurty/lox/environment"
 	"github.com/singurty/lox/parser"
+	"github.com/singurty/lox/scanner"
 )
 
 func runTest(source string) {
-	scanner := scanner.New(source)
-	tokens := scanner.ScanTokens()
-	parser := parser.New(tokens)
-	statements := parser.Parse()
+	// reset environment
+	env = environment.Global()
+	scan := scanner.New(source)
+	tokens := scan.ScanTokens()
+	parse := parser.New(tokens)
+	statements := parse.Parse()
 	Interpret(statements)
 }
 
@@ -19,15 +23,9 @@ func TestVariable(t *testing.T) {
 	input := `
 		var a = 2;
 		var b = 3;
-		print a;
-		print b;
 		a = b = a * b;
-		print a;
-		print b;
 		var c = "hello";
-		print c;
 		var d = c + " world";
-		print d;
 	`
 	runTest(input)
 	// Output:
@@ -89,15 +87,25 @@ func TestVariableScope(t *testing.T) {
 		print b;
 		print c;
 	`
+	expected := `inner a
+outer b
+global c
+outer a
+outer b
+global c
+gloabl a
+global b
+global c
+	`
+	testInterpreterOutput(input, expected, t)
+}
+
+func testInterpreterOutput(input string, expected string, t *testing.T) {
+	sb :=  &strings.Builder{}
+	InterpreterOptions.PrintOutput = sb
 	runTest(input)
-	// Output:
-	// inner a
-	// outer b
-	// global c
-	// outer a
-	// outer b
-	// global c
-	// gloabl a
-	// global b
-	// global c
+	output := sb.String()
+	if output != expected {
+		t.Errorf("Expected output to be : %vGot: %v", expected, output)
+	}
 }
