@@ -7,19 +7,36 @@ import (
 	"github.com/singurty/lox/parser"
 )
 
-func TestVariable(t *testing.T) {
-	input := `
-		var a = 2;
-		var b = 3;
-		a = b = a * b;
-		var c = "hello";
-		var d = c + " world";
-	`
-	scanner := scanner.New(input)
+func runTest(source string) {
+	scanner := scanner.New(source)
 	tokens := scanner.ScanTokens()
 	parser := parser.New(tokens)
 	statements := parser.Parse()
 	Interpret(statements)
+}
+
+func TestVariable(t *testing.T) {
+	input := `
+		var a = 2;
+		var b = 3;
+		print a;
+		print b;
+		a = b = a * b;
+		print a;
+		print b;
+		var c = "hello";
+		print c;
+		var d = c + " world";
+		print d;
+	`
+	runTest(input)
+	// Output:
+	// 2
+	// 3
+	// 6
+	// 6
+	// hello
+	// hello world
 	a, err := env.Get("a")
 	if err != nil {
 		t.Fatalf("Expected variable 'a' in env")
@@ -48,4 +65,39 @@ func TestVariable(t *testing.T) {
 	if d != "hello world" {
 		t.Errorf("Expected variable 'd' to be \"hello world\" got \"%v\" instead", d)
 	}
+}
+
+func TestVariableScope(t *testing.T) {
+	input := `
+		var a = "global a";
+		var b = "global b";
+		var c = "global c";
+		{
+		  var a = "outer a";
+		  var b = "outer b";
+		  {
+		    var a = "inner a";
+		    print a;
+		    print b;
+		    print c;
+		  }
+		  print a;
+		  print b;
+		  print c;
+		}
+		print a;
+		print b;
+		print c;
+	`
+	runTest(input)
+	// Output:
+	// inner a
+	// outer b
+	// global c
+	// outer a
+	// outer b
+	// global c
+	// gloabl a
+	// global b
+	// global c
 }

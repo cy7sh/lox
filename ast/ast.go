@@ -107,6 +107,10 @@ type PrintStmt struct {
 	Expression Expr
 }
 
+type Block struct {
+	Statements []Stmt
+}
+
 type Var struct {
 	Name token.Token
 	Initializer Expr

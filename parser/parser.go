@@ -9,7 +9,8 @@ import (
 
 /*
 program        → declaration* EOF
-declaration    → varCecl | statement
+block          → "{" declaration* "}"
+declaration    → varDecl | statement
 varDecl        → "var" IDENTIFIER ("=" expression)? ";"
 statement      → exprStmt | printStmt
 exprStmt       → expression ";"
@@ -61,6 +62,14 @@ func (p *Parser) statement() ast.Stmt {
 		expr := p.expression()
 		p.consume(token.SEMICOLON, "Expected \";\" after expression")
 		return &ast.PrintStmt{Expression: expr}
+	}
+	if p.match(token.LEFT_BRACE) {
+		var statements []ast.Stmt
+		for !p.check(token.RIGHT_BRACE) && !p.isAtEnd() {
+			statements = append(statements, p.declaration())
+		}
+		p.consume(token.RIGHT_BRACE, "Expect \"}\" after block")
+		return &ast.Block{Statements: statements}
 	}
 	expr := p.expression()
 	p.consume(token.SEMICOLON, "Expected \";\" after expression")
