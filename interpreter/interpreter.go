@@ -4,22 +4,25 @@ import (
 	"fmt"
 
 	"github.com/singurty/lox/ast"
-	"github.com/singurty/lox/environment"
 	"github.com/singurty/lox/token"
+	"github.com/singurty/lox/environment"
 )
 
 // keep tracks of variables
 var env = environment.Global()
 
 type RuntimeError struct {
-	line    int
-	where   string
+	line int
+	where string
 	message string
 }
 
 func Interpret(statements []ast.Stmt) error {
 	for _, statement := range statements {
-		return execute(statement)
+		err := execute(statement)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -41,7 +44,7 @@ func execute(statement ast.Stmt) error {
 		if s.Initializer == nil {
 			err := env.Define(s.Name.Lexeme, nil)
 			if err != nil {
-				return &RuntimeError{line: s.Name.Line, message: err.Error()}
+				return &RuntimeError{line: s.Name.Line, message:err.Error()}
 			}
 		} else {
 			value, err := evaluate(s.Initializer)
@@ -50,7 +53,7 @@ func execute(statement ast.Stmt) error {
 			}
 			err = env.Define(s.Name.Lexeme, value)
 			if err != nil {
-				return &RuntimeError{line: s.Name.Line, message: err.Error()}
+				return &RuntimeError{line: s.Name.Line, message:err.Error()}
 			}
 		}
 	case *ast.Block:
@@ -71,126 +74,125 @@ func executeBlock(statements []ast.Stmt, environment *environment.Environment) e
 
 func evaluate(node ast.Expr) (interface{}, error) {
 	switch n := node.(type) {
-	case *ast.Literal:
-		return n.Value, nil
-	case *ast.Variable:
-		value, err := env.Get(n.Name.Lexeme)
-	//	fmt.Println("got value of", n.Name.Lexeme, value)
-		if err != nil {
-			return nil, &RuntimeError{line: n.Name.Line, message: err.Error()}
-		}
-		return value, nil
-	case *ast.Assign:
-		value, err := evaluate(n.Value)
-		if err != nil {
-			return nil, err
-		}
-		err = env.Assign(n.Name.Lexeme, value)
-		if err != nil {
-			return nil, &RuntimeError{line: n.Name.Line, message: err.Error()}
-		}
-		return value, nil
-	case *ast.Grouping:
-		return evaluate(n.Expression)
-	case *ast.Unary:
-		right, err := evaluate(n.Right)
-		if err != nil {
-			return nil, err
-		}
-		switch n.Operator.Type {
-		case token.MINUS:
-			err := checkNumberOperand(n.Operator, right)
+		case *ast.Literal:
+			return n.Value, nil
+		case *ast.Variable:
+			value, err := env.Get(n.Name.Lexeme)
+			if err != nil {
+				return nil, &RuntimeError{line: n.Name.Line, message: err.Error()}
+			}
+			return value, nil
+		case *ast.Assign:
+			value, err := evaluate(n.Value)
 			if err != nil {
 				return nil, err
 			}
-			return -right.(float64), nil
-		case token.BANG:
-			return !isTrue(right), nil
-		}
-	case *ast.Binary:
-		left, err := evaluate(n.Left)
-		if err != nil {
-			return nil, err
-		}
-		right, err := evaluate(n.Right)
-		if err != nil {
-			return nil, err
-		}
-		switch n.Operator.Type {
-		case token.MINUS:
-			err := checkNumberOperands(n.Operator, right, left)
+			err = env.Assign(n.Name.Lexeme, value)
+			if err != nil {
+				return nil, &RuntimeError{line: n.Name.Line, message: err.Error()}
+			}
+			return value, nil
+		case *ast.Grouping:
+			return evaluate(n.Expression)
+		case *ast.Unary:
+			right, err := evaluate(n.Right)
 			if err != nil {
 				return nil, err
 			}
-			return left.(float64) - right.(float64), nil
-		case token.SLASH:
-			err := checkNumberOperands(n.Operator, right, left)
-			if err != nil {
-				return nil, err
-			}
-			if right.(float64) == 0 {
-				return nil, &RuntimeError{line: n.Operator.Line, where: n.Operator.Lexeme, message: "Divide by zero"}
-			}
-			return left.(float64) / right.(float64), nil
-		case token.STAR:
-			err := checkNumberOperands(n.Operator, right, left)
-			if err != nil {
-				return nil, err
-			}
-			return left.(float64) * right.(float64), nil
-		case token.PLUS:
-			switch l := left.(type) {
-			case float64:
-				switch r := right.(type) {
-				case float64:
-					return l + r, nil
+			switch n.Operator.Type {
+			case token.MINUS:
+				err := checkNumberOperand(n.Operator, right)
+				if err != nil {
+					return nil, err
 				}
-			case string:
-				switch r := right.(type) {
-				case string:
-					return l + r, nil
-				}
+				return -right.(float64), nil
+			case token.BANG:
+				return !isTrue(right), nil
 			}
-			return nil, &RuntimeError{line: n.Operator.Line, where: n.Operator.Lexeme, message: "Operands must be eithier numbers or strings"}
-		case token.GREATER:
-			err := checkNumberOperands(n.Operator, right, left)
+		case *ast.Binary:
+			left, err := evaluate(n.Left)
 			if err != nil {
 				return nil, err
 			}
-			return left.(float64) > right.(float64), nil
-		case token.GREATER_EQUAL:
-			err := checkNumberOperands(n.Operator, right, left)
+			right, err := evaluate(n.Right)
 			if err != nil {
 				return nil, err
 			}
-			return left.(float64) >= right.(float64), nil
-		case token.LESS:
-			err := checkNumberOperands(n.Operator, right, left)
+			switch n.Operator.Type {
+				case token.MINUS:
+					err := checkNumberOperands(n.Operator, right, left)
+					if err != nil {
+						return nil, err
+					}
+					return left.(float64) - right.(float64), nil
+				case token.SLASH:
+					err := checkNumberOperands(n.Operator, right, left)
+					if err != nil {
+						return nil, err
+					}
+					if right.(float64) == 0 {
+						return nil, &RuntimeError{line: n.Operator.Line, where: n.Operator.Lexeme, message: "Divide by zero"}
+					}
+					return left.(float64) / right.(float64), nil
+				case token.STAR:
+					err := checkNumberOperands(n.Operator, right, left)
+					if err != nil {
+						return nil, err
+					}
+					return left.(float64) * right.(float64), nil
+				case token.PLUS:
+					switch l := left.(type) {
+						case float64:
+							switch r := right.(type) {
+							case float64:
+								return l + r, nil
+							}
+						case string:
+							switch r := right.(type) {
+							case string:
+								return l + r, nil
+							}
+					}
+					return nil, &RuntimeError{line: n.Operator.Line, where: n.Operator.Lexeme, message: "Operands must be eithier numbers or strings"}
+				case token.GREATER:
+					err := checkNumberOperands(n.Operator, right, left)
+					if err != nil {
+						return nil, err
+					}
+					return left.(float64) > right.(float64), nil
+				case token.GREATER_EQUAL:
+					err := checkNumberOperands(n.Operator, right, left)
+					if err != nil {
+						return nil, err
+					}
+					return left.(float64) >= right.(float64), nil
+				case token.LESS:
+					err := checkNumberOperands(n.Operator, right, left)
+					if err != nil {
+						return nil, err
+					}
+					return left.(float64) < right.(float64), nil
+				case token.LESS_EQUAL:
+					err := checkNumberOperands(n.Operator, right, left)
+					if err != nil {
+						return nil, err
+					}
+					return left.(float64) <= right.(float64), nil
+				case token.EQUAL_EQUAL:
+					return isEqual(left, right), nil
+				case token.BANG_EQUAL:
+					return !isEqual(left, right), nil
+			}
+		case *ast.Ternary:
+			conditon, err := evaluate(n.Condition)
 			if err != nil {
 				return nil, err
 			}
-			return left.(float64) < right.(float64), nil
-		case token.LESS_EQUAL:
-			err := checkNumberOperands(n.Operator, right, left)
-			if err != nil {
-				return nil, err
+			if isTrue(conditon) {
+				return evaluate(n.Then)
+			} else {
+				return evaluate(n.Else)
 			}
-			return left.(float64) <= right.(float64), nil
-		case token.EQUAL_EQUAL:
-			return isEqual(left, right), nil
-		case token.BANG_EQUAL:
-			return !isEqual(left, right), nil
-		}
-	case *ast.Ternary:
-		conditon, err := evaluate(n.Condition)
-		if err != nil {
-			return nil, err
-		}
-		if isTrue(conditon) {
-			return evaluate(n.Then)
-		} else {
-			return evaluate(n.Else)
-		}
 	}
 	return nil, &RuntimeError{message: "Error evaluating expression"}
 }
@@ -213,11 +215,11 @@ func checkNumberOperand(operator token.Token, operand interface{}) error {
 func checkNumberOperands(operator token.Token, operand1, operand2 interface{}) error {
 	_, ok := operand1.(float64)
 	if !ok {
-		return &RuntimeError{line: operator.Line, where: operator.Lexeme, message: "Operand must be a number"}
+		return &RuntimeError{line: operator.Line, where: operator.Lexeme, message:"Operand must be a number"}
 	}
 	_, ok = operand2.(float64)
 	if !ok {
-		return &RuntimeError{line: operator.Line, where: operator.Lexeme, message: "Operand must be a number"}
+		return &RuntimeError{line: operator.Line, where: operator.Lexeme, message:"Operand must be a number"}
 	}
 	return nil
 }
