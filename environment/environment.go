@@ -42,6 +42,9 @@ func (e *Environment) Assign(variable string, value interface{}) error {
 func (e *Environment) Get(variable string) (interface{}, error) {
 	value, ok := e.environment[variable]
 	if ok {
+		if value == nil {
+			return nil, errors.New("Uninitialized variable \"" + variable + "\"")
+		}
 		return value, nil
 	} else {
 		if e.enclosing != nil {
