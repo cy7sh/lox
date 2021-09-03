@@ -3,6 +3,7 @@ package parser
 import (
 	"fmt"
 
+//	"github.com/davecgh/go-spew/spew" // to dump structs for debugging
 	"github.com/singurty/lox/ast"
 	"github.com/singurty/lox/token"
 )
@@ -11,7 +12,8 @@ import (
 program        → block* EOF
 declaration    → varDecl | statement
 varDecl        → "var" IDENTIFIER ("=" expression)? ";"
-statement      → exprStmt | printStmt | block
+statement      → exprStmt | printStmt | block | forStmt
+forStmt        → "for" "(" (varDecl | exprStmt | ";") expression? ";" expression? ")" statement
 whileStmt      → "while" "(" expression ")" statement
 ifStmt         → "if " "(" expression ")" statement ("else" statement)?
 block          → "{" declaration* "}"
@@ -83,16 +85,59 @@ func (p *Parser) statement() ast.Stmt {
 		for !p.check(token.RIGHT_BRACE) && !p.isAtEnd() {
 			statements = append(statements, p.declaration())
 		}
-		p.consume(token.RIGHT_BRACE, "Expect \"}\" after block")
+		p.consume(token.RIGHT_BRACE, "Expected \"}\" after block")
 		return &ast.Block{Statements: statements}
 	}
 	if p.match(token.WHILE) {
-		p.consume(token.LEFT_PAREN, "Expect \"(\" after \"while\"")
+		p.consume(token.LEFT_PAREN, "Expected \"(\" after \"while\"")
 		conditon := p.expression()
-		p.consume(token.RIGHT_PAREN, "Expect \")\" after condition")
+		p.consume(token.RIGHT_PAREN, "Expected \")\" after condition")
 		body := p.statement()
 		return &ast.While{Condition: conditon, Body: body}
 	}
+	if p.match(token.FOR) {
+		p.consume(token.LEFT_PAREN, "Expected \"(\" after \"for\"")
+		var initializer ast.Stmt
+		if p.match(token.SEMICOLON) {
+			initializer = nil
+		} else if p.check(token.VAR) {
+			initializer = p.declaration()
+		} else {
+			initializer = p.expressionStatement()
+		}
+		var condition ast.Expr
+		if !p.check(token.SEMICOLON) {
+			condition = p.expression()
+		}
+		p.consume(token.SEMICOLON, "Expected \";\" after loop condition")
+		var increment ast.Stmt
+		if !p.check(token.SEMICOLON) {
+			increment = &ast.ExprStmt{Expression: p.expression()}
+		}
+		p.consume(token.RIGHT_PAREN, "Expected \")\" after increment expression")
+		body := p.statement()
+		statements := make([]ast.Stmt, 0)
+		statements = append(statements, body)
+		if increment != nil {
+			statements = append(statements, increment)
+		}
+		body = &ast.Block{Statements: statements}
+		if condition == nil {
+			condition = &ast.Literal{Value: true}
+		}
+		body = &ast.While{Condition: condition, Body: body}
+		if initializer != nil {
+			statements = make([]ast.Stmt, 0)
+			statements = append(statements, initializer)
+			statements = append(statements, body)
+			body = &ast.Block{Statements: statements}
+		}
+		return body
+	}
+	return p.expressionStatement()
+}
+
+func (p *Parser) expressionStatement() ast.Stmt {
 	expr := p.expression()
 	if p.isAtEnd() {
 		p.current = 0

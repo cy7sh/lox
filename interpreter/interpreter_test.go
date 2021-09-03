@@ -205,6 +205,43 @@ loo
 	testInterpreterOutput(input, expected, t)
 }
 
+func TestForLoop(t *testing.T) {
+	input := `
+		var a = 0;
+		var temp;
+		
+		for (var b = 1; a < 10000; b = temp + b) {
+		  print a;
+		  temp = a;
+		  a = b;
+		}
+	`
+	expected := `
+0
+1
+1
+2
+3
+5
+8
+13
+21
+34
+55
+89
+144
+233
+377
+610
+987
+1597
+2584
+4181
+6765
+`
+	testInterpreterOutput(input, expected, t)
+}
+
 func testInterpreterOutput(input string, expected string, t *testing.T) {
 	sb :=  &strings.Builder{}
 	InterpreterOptions.PrintOutput = sb

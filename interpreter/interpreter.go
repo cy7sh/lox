@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 
+//	"github.com/davecgh/go-spew/spew" // to dump structs for debugging
 	"github.com/singurty/lox/ast"
 	"github.com/singurty/lox/environment"
 	"github.com/singurty/lox/token"

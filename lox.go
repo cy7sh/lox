@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"errors"
 
@@ -49,7 +48,8 @@ func runFile(file string) {
 	}
 	err = run(string(content))
 	if err != nil {
-		log.Fatal(err.Error())
+		fmt.Println(err.Error())
+		os.Exit(1)
 	}
 }
 
