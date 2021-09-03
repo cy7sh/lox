@@ -123,3 +123,9 @@ type Variable struct {
 func (v *Variable) String() string {
 	return v.Name.Lexeme
 }
+
+type If struct {
+	Condition Expr
+	ThenBranch Stmt
+	ElseBranch Stmt
+}

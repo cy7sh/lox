@@ -100,6 +100,55 @@ global c`
 	testInterpreterOutput(input, expected, t)
 }
 
+func TestConditionalExecution(t *testing.T) {
+	input := `
+	var a = 2;
+	var b = 3;
+	var c = 2;
+	if (a == c) {
+		a = a * b;
+		print a;
+	}
+	if (a == 2) {
+		a = 12;
+		print a;
+	} else {
+		a = 10;
+		print a;
+	}
+	if (a == 6) {
+		a = 5;
+		print a;
+	} else if (a == 10) {
+		b = 24;
+		print b;
+	}
+	if (a == 6) {
+		a = 39;
+		print a;
+	} else if (a == 30) {
+		b = 24;
+		print b;
+	} else {
+		c = 25;
+		print c;
+	}
+	print a;
+	print b;
+	print c;
+	`
+	expected := `
+6
+10
+24
+25
+10
+24
+25
+`
+	testInterpreterOutput(input, expected, t)
+}
+
 func testInterpreterOutput(input string, expected string, t *testing.T) {
 	sb :=  &strings.Builder{}
 	InterpreterOptions.PrintOutput = sb

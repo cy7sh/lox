@@ -69,6 +69,22 @@ func execute(statement ast.Stmt) error {
 		if err != nil {
 			return err
 		}
+	case *ast.If:
+		condition, err := evaluate(s.Condition)
+		if err != nil {
+			return err
+		}
+		if isTrue(condition) {
+			err := execute(s.ThenBranch)
+			if err != nil {
+				return err
+			}
+		} else if s.ElseBranch != nil {
+			err := execute(s.ElseBranch)
+			if err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }

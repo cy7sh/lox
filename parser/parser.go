@@ -12,6 +12,7 @@ program        → block* EOF
 declaration    → varDecl | statement
 varDecl        → "var" IDENTIFIER ("=" expression)? ";"
 statement      → exprStmt | printStmt | block
+ifStmt         → "if " "(" expression ")" statement ("else" statement)?
 block          → "{" declaration* "}"
 exprStmt       → expression ";"
 printStmt      → "print" expression ";"
@@ -62,6 +63,17 @@ func (p *Parser) statement() ast.Stmt {
 		expr := p.expression()
 		p.consume(token.SEMICOLON, "Expected \";\" after expression")
 		return &ast.PrintStmt{Expression: expr}
+	}
+	if p.match(token.IF) {
+		p.consume(token.LEFT_PAREN, "Expected \"(\" after \"if\"")
+		condition := p.expression()
+		p.consume(token.RIGHT_PAREN, "Expected \")\" after if condition")
+		thenBranch := p.statement()
+		var elseBranch ast.Stmt
+		if p.match(token.ELSE) {
+			elseBranch = p.statement()
+		}
+		return &ast.If{Condition: condition, ElseBranch: elseBranch, ThenBranch: thenBranch}
 	}
 	if p.match(token.LEFT_BRACE) {
 		var statements []ast.Stmt
@@ -240,7 +252,7 @@ func (p *Parser) match(types ...token.Type) bool {
 }
 
 func (p *Parser) check(tokenType token.Type) bool {
-	if (p.isAtEnd()) {
+	if p.isAtEnd() {
 		return false
 	}
 	return p.peek().Type == tokenType

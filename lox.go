@@ -67,7 +67,6 @@ func run(source string) error {
 	if parser.HadError {
 		return errors.New("parser error")
 	}
-//	fmt.Println(expression.String())
 	err := interpreter.Interpret(statements)
 	if err != nil {
 		return err
