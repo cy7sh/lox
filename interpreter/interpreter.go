@@ -42,6 +42,9 @@ func execute(statement ast.Stmt) error {
 		if err != nil {
 			return err
 		}
+		if value == nil {
+			value = "null"
+		}
 		fmt.Fprintln(InterpreterOptions.PrintOutput, value)
 	case *ast.ExprStmt:
 		_, err := evaluate(s.Expression)
@@ -213,6 +216,25 @@ func evaluate(node ast.Expr) (interface{}, error) {
 				case token.BANG_EQUAL:
 					return !isEqual(left, right), nil
 			}
+		case *ast.Logical:
+			left, err := evaluate(n.Left)
+			if err != nil {
+				return nil, err
+			}
+			if n.Operator.Type == token.OR {
+				if isTrue(left) {
+					return left, nil
+				}
+			} else {
+				if !isTrue(left) {
+					return left, nil
+				}
+			}
+			right, err := evaluate(n.Right)
+			if err != nil {
+				return nil, err
+			}
+			return right, nil
 		case *ast.Ternary:
 			conditon, err := evaluate(n.Condition)
 			if err != nil {
@@ -260,7 +282,7 @@ func isTrue(value interface{}) bool {
 	} else if b, ok := value.(bool); ok {
 		return b
 	}
-	return false
+	return true
 }
 
 func isEqual(left, right interface{}) bool {

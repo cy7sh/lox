@@ -129,3 +129,17 @@ type If struct {
 	ThenBranch Stmt
 	ElseBranch Stmt
 }
+
+type Logical struct {
+	Left Expr
+	Operator token.Token
+	Right Expr
+}
+
+func (l *Logical) String() string {
+	var sb strings.Builder
+	sb.WriteString(l.Left.String())
+	sb.WriteString(" or ")
+	sb.WriteString(l.Right.String())
+	return sb.String()
+}

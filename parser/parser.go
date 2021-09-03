@@ -17,7 +17,9 @@ block          → "{" declaration* "}"
 exprStmt       → expression ";"
 printStmt      → "print" expression ";"
 expression     → ternary
-assignment     → IDENTIFIER "=" assignment | ternary
+assignment     → IDENTIFIER "=" assignment | logic_or
+logic_or       → logic_and ("or" logic_and)*
+logic_and      → ternary ("and" ternary)*
 ternary        → equality ? equality : equality
 equality       → comparison ( ( "!=" | "==" ) comparison )*
 comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )*
@@ -98,7 +100,7 @@ func (p *Parser) expression() ast.Expr {
 }
 
 func (p *Parser) assignment() ast.Expr {
-	expr := p.ternary()
+	expr := p.or()
 	if p.match(token.EQUAL) {
 		equals := p.previous()
 		value := p.assignment()
@@ -108,6 +110,26 @@ func (p *Parser) assignment() ast.Expr {
 			return &ast.Assign{Name: name, Value: value}
 		}
 		p.handleError(equals, "Invalid assignment target")
+	}
+	return expr
+}
+
+func (p *Parser) or() ast.Expr {
+	expr := p.and()
+	if p.match(token.OR) {
+		operator := p.previous()
+		right := p.and()
+		return &ast.Logical{Left: expr, Operator: operator, Right: right}
+	}
+	return expr
+}
+
+func (p *Parser) and() ast.Expr {
+	expr := p.ternary()
+	if p.match(token.AND) {
+		operator := p.previous()
+		right := p.ternary()
+		return &ast.Logical{Left: expr, Operator: operator, Right: right}
 	}
 	return expr
 }

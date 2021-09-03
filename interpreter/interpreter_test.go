@@ -149,6 +149,38 @@ func TestConditionalExecution(t *testing.T) {
 	testInterpreterOutput(input, expected, t)
 }
 
+func TestLogicalOperators(t *testing.T) {
+	input := `
+	print "hi" or 2;
+	print null or "yes";
+	print true or 2;
+	print false or "yes";
+	print false or false;
+	print null or null;
+	print "hi" and 2;
+	print null and "yes";
+	print true and 2;
+	print false and "yes";
+	print false and false;
+	print null and null;
+	`
+	expected := `
+hi
+yes
+true
+yes
+false
+null
+2
+null
+2
+false
+false
+null
+`
+	testInterpreterOutput(input, expected, t)
+}
+
 func testInterpreterOutput(input string, expected string, t *testing.T) {
 	sb :=  &strings.Builder{}
 	InterpreterOptions.PrintOutput = sb
