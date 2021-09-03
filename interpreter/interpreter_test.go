@@ -7,6 +7,7 @@ import (
 	"github.com/singurty/lox/environment"
 	"github.com/singurty/lox/parser"
 	"github.com/singurty/lox/scanner"
+//	"github.com/augustoroman/hexdump" // to debug minor differences in text comparison
 )
 
 func runTest(source string) {
@@ -181,6 +182,29 @@ null
 	testInterpreterOutput(input, expected, t)
 }
 
+func TestWhileLoop(t *testing.T) {
+	input := `
+	var a = 0;
+	while (a < 10) {
+		print "loo";
+		a = a + 1;
+	}
+	`
+	expected := `
+loo
+loo
+loo
+loo
+loo
+loo
+loo
+loo
+loo
+loo
+`
+	testInterpreterOutput(input, expected, t)
+}
+
 func testInterpreterOutput(input string, expected string, t *testing.T) {
 	sb :=  &strings.Builder{}
 	InterpreterOptions.PrintOutput = sb
@@ -188,6 +212,6 @@ func testInterpreterOutput(input string, expected string, t *testing.T) {
 	output := strings.Trim(sb.String(), "\n")
 	expected = strings.Trim(expected, "\n")
 	if output != expected {
-		t.Errorf("Expected output to be : %v\nGot: %v\n", expected, output)
+		t.Errorf("Expected output to be : %v\nGot: %v\n",expected, output)
 	}
 }

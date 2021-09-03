@@ -88,6 +88,21 @@ func execute(statement ast.Stmt) error {
 				return err
 			}
 		}
+	case *ast.While:
+		condition, err := evaluate(s.Condition)
+		if err != nil {
+			return err
+		}
+		for isTrue(condition) {
+			err := execute(s.Body)
+			if err != nil {
+				return err
+			}
+			condition, err = evaluate(s.Condition)
+			if err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }

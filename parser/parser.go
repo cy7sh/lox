@@ -12,6 +12,7 @@ program        → block* EOF
 declaration    → varDecl | statement
 varDecl        → "var" IDENTIFIER ("=" expression)? ";"
 statement      → exprStmt | printStmt | block
+whileStmt      → "while" "(" expression ")" statement
 ifStmt         → "if " "(" expression ")" statement ("else" statement)?
 block          → "{" declaration* "}"
 exprStmt       → expression ";"
@@ -84,6 +85,13 @@ func (p *Parser) statement() ast.Stmt {
 		}
 		p.consume(token.RIGHT_BRACE, "Expect \"}\" after block")
 		return &ast.Block{Statements: statements}
+	}
+	if p.match(token.WHILE) {
+		p.consume(token.LEFT_PAREN, "Expect \"(\" after \"while\"")
+		conditon := p.expression()
+		p.consume(token.RIGHT_PAREN, "Expect \")\" after condition")
+		body := p.statement()
+		return &ast.While{Condition: conditon, Body: body}
 	}
 	expr := p.expression()
 	if p.isAtEnd() {

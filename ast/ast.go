@@ -143,3 +143,8 @@ func (l *Logical) String() string {
 	sb.WriteString(l.Right.String())
 	return sb.String()
 }
+
+type While struct {
+	Condition Expr
+	Body Stmt
+}
