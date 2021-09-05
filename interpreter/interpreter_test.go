@@ -10,12 +10,18 @@ import (
 //	"github.com/augustoroman/hexdump" // to debug minor differences in text comparison
 )
 
-func runTest(source string) {
+func runTest(source string, t *testing.T) {
 	// reset environment
 	env = environment.Global()
 	scan := scanner.New(source)
 	tokens := scan.ScanTokens()
+	if scan.HadError {
+		t.Fatal("scanner error")
+	}
 	parse := parser.New(tokens)
+	if parse.HadError {
+		t.Fatal("parser error")
+	}
 	statements := parse.Parse()
 	Interpret(statements)
 }
@@ -28,7 +34,7 @@ func TestVariable(t *testing.T) {
 		var c = "hello";
 		var d = c + " world";
 	`
-	runTest(input)
+	runTest(input, t)
 	// Output:
 	// 2
 	// 3
@@ -242,10 +248,54 @@ func TestForLoop(t *testing.T) {
 	testInterpreterOutput(input, expected, t)
 }
 
+func TestBreak(t *testing.T) {
+	input := `
+		for (var a = 0; ; a = a + 1) {
+			var b = 0;
+			while (b < 5) {
+				if (a > 2) {
+					break;
+				}
+				print "while";
+				b = b + 1;
+			}
+			if (a > 5) {
+				break;
+				print "after break";
+			}
+			print a;
+		}
+	`
+	expected := `
+while
+while
+while
+while
+while
+0
+while
+while
+while
+while
+while
+1
+while
+while
+while
+while
+while
+2
+3
+4
+5
+`
+	testInterpreterOutput(input, expected, t)
+}
+
 func testInterpreterOutput(input string, expected string, t *testing.T) {
 	sb :=  &strings.Builder{}
 	InterpreterOptions.PrintOutput = sb
-	runTest(input)
+	runTest(input, t)
 	output := strings.Trim(sb.String(), "\n")
 	expected = strings.Trim(expected, "\n")
 	if output != expected {

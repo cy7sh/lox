@@ -11,8 +11,9 @@ import (
 	"github.com/singurty/lox/token"
 )
 
-// keep tracks of variables
-var env = environment.Global()
+var env = environment.Global() // keep tracks of variables
+var breakHit bool
+var loopDepth int
 
 type Options struct {
 	PrintOutput io.Writer
@@ -37,6 +38,9 @@ func Interpret(statements []ast.Stmt) error {
 }
 
 func execute(statement ast.Stmt) error {
+	if breakHit && loopDepth > 0 {
+		return nil
+	}
 	switch s := statement.(type) {
 	case *ast.PrintStmt:
 		value, err := evaluate(s.Expression)
@@ -94,16 +98,24 @@ func execute(statement ast.Stmt) error {
 		if err != nil {
 			return err
 		}
+		loopDepth++
 		for isTrue(condition) {
 			err := execute(s.Body)
 			if err != nil {
 				return err
+			}
+			if breakHit {
+				breakHit = false
+				break
 			}
 			condition, err = evaluate(s.Condition)
 			if err != nil {
 				return err
 			}
 		}
+		loopDepth--
+	case *ast.Break:
+		breakHit = true
 	}
 	return nil
 }

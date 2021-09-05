@@ -35,6 +35,7 @@ var keywords = map[string]token.Type {
 	"true":		token.TRUE,
 	"var":		token.VAR,
 	"while":	token.WHILE,
+	"break":	token.BREAK,
 }
 
 func New(source string) Scanner {

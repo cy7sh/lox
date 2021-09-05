@@ -12,7 +12,8 @@ import (
 program        → block* EOF
 declaration    → varDecl | statement
 varDecl        → "var" IDENTIFIER ("=" expression)? ";"
-statement      → exprStmt | printStmt | block | forStmt
+statement      → exprStmt | printStmt | block | forStmt | break
+break          → "break" ";"
 forStmt        → "for" "(" (varDecl | exprStmt | ";") expression? ";" expression? ")" statement
 whileStmt      → "while" "(" expression ")" statement
 ifStmt         → "if " "(" expression ")" statement ("else" statement)?
@@ -87,6 +88,10 @@ func (p *Parser) statement() ast.Stmt {
 		}
 		p.consume(token.RIGHT_BRACE, "Expected \"}\" after block")
 		return &ast.Block{Statements: statements}
+	}
+	if p.match(token.BREAK) {
+		p.consume(token.SEMICOLON, "Expected \";\" after \"break\"")
+		return &ast.Break{}
 	}
 	if p.match(token.WHILE) {
 		p.consume(token.LEFT_PAREN, "Expected \"(\" after \"while\"")

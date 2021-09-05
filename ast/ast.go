@@ -148,3 +148,7 @@ type While struct {
 	Condition Expr
 	Body Stmt
 }
+
+type Break struct {
+
+}
