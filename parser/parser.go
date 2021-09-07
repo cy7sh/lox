@@ -93,6 +93,10 @@ func (p *Parser) statement() ast.Stmt {
 		p.consume(token.SEMICOLON, "Expected \";\" after \"break\"")
 		return &ast.Break{}
 	}
+	if p.match(token.CONTINUE) {
+		p.consume(token.SEMICOLON, "Expected \";\" after \"continue\"")
+		return &ast.Continue{}
+	}
 	if p.match(token.WHILE) {
 		p.consume(token.LEFT_PAREN, "Expected \"(\" after \"while\"")
 		conditon := p.expression()
@@ -115,29 +119,20 @@ func (p *Parser) statement() ast.Stmt {
 			condition = p.expression()
 		}
 		p.consume(token.SEMICOLON, "Expected \";\" after loop condition")
-		var increment ast.Stmt
+		var increment ast.Expr
 		if !p.check(token.SEMICOLON) {
-			increment = &ast.ExprStmt{Expression: p.expression()}
+			increment = p.expression()
 		}
 		p.consume(token.RIGHT_PAREN, "Expected \")\" after increment expression")
 		body := p.statement()
-		statements := make([]ast.Stmt, 0)
-		statements = append(statements, body)
-		if increment != nil {
-			statements = append(statements, increment)
-		}
-		body = &ast.Block{Statements: statements}
 		if condition == nil {
 			condition = &ast.Literal{Value: true}
 		}
-		body = &ast.While{Condition: condition, Body: body}
-		if initializer != nil {
-			statements = make([]ast.Stmt, 0)
-			statements = append(statements, initializer)
-			statements = append(statements, body)
-			body = &ast.Block{Statements: statements}
-		}
-		return body
+		loop := &ast.For{Body: body, Condition: condition, Initializer: initializer, Increment: increment}
+		// wrap the loop in a block so that it gets its own scope
+		statements := make([]ast.Stmt, 1)
+		statements[0] = loop
+		return &ast.Block{Statements: statements}
 	}
 	return p.expressionStatement()
 }

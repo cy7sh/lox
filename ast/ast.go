@@ -149,6 +149,16 @@ type While struct {
 	Body Stmt
 }
 
-type Break struct {
+// keep track of increment expression because it should be executed even when continuing
+type For struct {
+	Body Stmt
+	Condition Expr
+	Increment Expr
+	Initializer Stmt
+}
 
+type Break struct {
+}
+
+type Continue struct {
 }

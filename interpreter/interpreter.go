@@ -13,6 +13,7 @@ import (
 
 var env = environment.Global() // keep tracks of variables
 var breakHit bool
+var continueHit bool
 var loopDepth int
 
 type Options struct {
@@ -38,7 +39,7 @@ func Interpret(statements []ast.Stmt) error {
 }
 
 func execute(statement ast.Stmt) error {
-	if breakHit && loopDepth > 0 {
+	if (breakHit && loopDepth > 0) || (continueHit && loopDepth > 0) {
 		return nil
 	}
 	switch s := statement.(type) {
@@ -112,10 +113,52 @@ func execute(statement ast.Stmt) error {
 			if err != nil {
 				return err
 			}
+			if continueHit {
+				continueHit = false
+				continue
+			}
 		}
 		loopDepth--
+	case *ast.For:
+		err := execute(s.Initializer)
+		if err != nil {
+			return err
+		}
+		condition, err := evaluate(s.Condition)
+		if err != nil {
+			return err
+		}
+		loopDepth++
+		for isTrue(condition) {
+			err := execute(s.Body)
+			if err != nil {
+				return err
+			}
+			if breakHit {
+				breakHit = false
+				break
+			}
+			_, err = evaluate(s.Increment)
+			if err != nil {
+				return err
+			}
+			condition, err = evaluate(s.Condition)
+			if err != nil {
+				return err
+			}
+			if continueHit {
+				continueHit = false
+				err := execute(s.Increment)
+				if err != nil {
+					return err
+				}
+				continue
+			}
+		}
 	case *ast.Break:
 		breakHit = true
+	case *ast.Continue:
+		continueHit = true
 	}
 	return nil
 }

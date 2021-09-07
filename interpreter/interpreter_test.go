@@ -292,6 +292,36 @@ while
 	testInterpreterOutput(input, expected, t)
 }
 
+func TestContinue(t *testing.T) {
+	tests := []struct {
+		input		string
+		expected	string
+	}{
+		{`
+			var a = 1;
+			while (a < 10) {
+				a = a + 1;
+				if (a < 9) {
+					continue;
+				}
+				print a;
+				break;
+			}
+			`, "9"},
+		{`
+			for (var a = 1; a < 10; a = a + 1) {
+				if (a < 9) {
+					continue;
+				}
+				print a;
+			}
+			`, "9"},
+	}
+	for _, test := range tests {
+		testInterpreterOutput(test.input, test.expected, t)
+	}
+}
+
 func testInterpreterOutput(input string, expected string, t *testing.T) {
 	sb :=  &strings.Builder{}
 	InterpreterOptions.PrintOutput = sb

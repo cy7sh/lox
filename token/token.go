@@ -53,6 +53,7 @@ const (
 	VAR
 	WHILE
 	BREAK
+	CONTINUE
 
 	EOF
 )
