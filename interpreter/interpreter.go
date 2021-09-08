@@ -155,6 +155,7 @@ func execute(statement ast.Stmt) error {
 				continue
 			}
 		}
+		loopDepth--
 	case *ast.Break:
 		breakHit = true
 	case *ast.Continue:
