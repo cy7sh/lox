@@ -34,7 +34,7 @@ while (condition)
 for (initializer; condition; increment)
     statement
 ```
-`initilizer` can be variable declaration or an expression. It is evaluated before the loop starts. `condition` must be an expression. It is evaluated *before* each iteration. Loop terminates if the result is falsey. `increment` must be an expression. It is evaluated *after* each iteration.
+`initilizer` can be variable declaration or an expression. If a variable is declared, it's scope is limited to the loop. It is evaluated before the loop starts. `condition` must be an expression. It is evaluated *before* each iteration. Loop terminates if the result is falsey. `increment` must be an expression. It is evaluated *after* each iteration.
 ### Continue and break
 ```
 continue;
