@@ -29,7 +29,9 @@ equality       → comparison ( ( "!=" | "==" ) comparison )*
 comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )*
 term           → factor ( ( "-" | "+" ) factor )*
 factor         → unary ( ( "/" | "*" ) unary )*
-unary          → ( "!" | "-" ) unary | primary
+unary          → ( "!" | "-" ) unary | primary | call
+call           → primary ( "(" arguments? ")" )*
+arguments      → expression ("," expression)*
 primary        → NUMBER | STRING | IDENTIFIER | "true" | "false" | "nil" | "(" expression ")"
 */
 
@@ -248,7 +250,32 @@ func (p *Parser) unary() ast.Expr {
 		expr := &ast.Unary{Operator: operator, Right: right}
 		return expr
 	}
-	return p.primary()
+	return p.call()
+}
+
+func (p *Parser) call() ast.Expr {
+	expr := p.primary()
+	for p.match(token.LEFT_PAREN){
+		expr = p.finishCall(expr)
+	}
+	return expr
+}
+
+func (p *Parser) finishCall(callee ast.Expr) *ast.Call {
+	arguments := make([]ast.Expr, 0)
+	for !p.check(token.RIGHT_PAREN) {
+		for {
+			arguments = append(arguments, p.expression())
+			if !p.match(token.COMMA) {
+				break
+			}
+		}
+	}
+	if len(arguments) > 255 {
+		p.reportError(p.peek(), "Can't have more than 255 arguments")
+	}
+	paren := p.consume(token.RIGHT_PAREN, "Expect \")\" after arguments")
+	return &ast.Call{Callee: callee, Paren: paren, Arguments: arguments}
 }
 
 func (p *Parser) primary() ast.Expr {
@@ -299,13 +326,17 @@ func (p *Parser) synchronize() {
 }
 
 func (p *Parser) handleError(tk token.Token, message string) {
+	p.reportError(tk, message)
+	p.synchronize()
+}
+
+func (p *Parser) reportError(tk token.Token, message string) {
 	p.HadError = true
 	if tk.Type == token.EOF {
 		fmt.Printf("[Line %v] Error at end: %v\n", tk.Line, message)
 	} else {
 		fmt.Printf("[Line %v] Error at %v: %v\n", tk.Line, tk.Lexeme, message)
 	}
-	p.synchronize()
 }
 
 func (p *Parser) consume(tokenType token.Type, message string) token.Token {

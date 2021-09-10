@@ -162,3 +162,20 @@ type Break struct {
 
 type Continue struct {
 }
+
+type Call struct {
+	Callee Expr
+	Paren token.Token
+	Arguments []Expr
+}
+
+func (c *Call) String() string {
+	var sb strings.Builder
+	sb.WriteString(c.Callee.String())
+	sb.WriteString("(")
+	for _, v := range c.Arguments {
+		sb.WriteString(v.String())
+		sb.WriteString(",")
+	}
+	return sb.String()
+}
