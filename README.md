@@ -14,23 +14,25 @@ a = 10;
 ```
 var a = 10;
 ```
+### Boolean
+There are two boolean primitives `true` and `false`. `null` is falsey; anything else is truthy.
 ### Block
 Block is a statement containing other statements. Statements inside a block have their own environment with variables. Statements inside the block can access and modify variables declared outside the block. Variables declared inside the block are only accessible inside the block.
 ```
 {
-	statements
+    statements
 }
 ```
 ### While loop
 ```
 while (condition)
-	statement
+    statement
 ```
 
 ### For loop
 ```
 for (initializer; condition; increment)
-	statement
+    statement
 ```
 `initilizer` can be variable declaration or an expression. It is evaluated before the loop starts. `condition` must be an expression. It is evaluated *before* each iteration. Loop terminates if the result is falsey. `increment` must be an expression. It is evaluated *after* each iteration.
 ### Continue and break
@@ -45,19 +47,19 @@ Break out of current loop and continue executing statements after the loop.
 ### if else
 ```
 if (condition)
-	statement
+    statement
 else
-	satement
+    satement
 ```
 `condition` must be an expression. `else` is optional.
 ### Logical operators
 ```
-	print "hi" or 2;
-	print true or 2;
-	print false or "yes";
-	print "hi" and 2;
-	print true and 2;
-	print false and "yes";
+print "hi" or 2;
+print true or 2;
+print false or "yes";
+print "hi" and 2;
+print true and 2;
+print false and "yes";
 ```
 Output:
 ```
