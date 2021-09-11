@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
+	"time"
 
 //	"github.com/davecgh/go-spew/spew" // to dump structs for debugging
 	"github.com/singurty/lox/ast"
@@ -11,13 +13,19 @@ import (
 	"github.com/singurty/lox/token"
 )
 
-var env = environment.Global() // keep tracks of variables
+var env = environment.Global() // keep tracks of current environment
+var global = env // keep track of global environment
 var breakHit bool
 var continueHit bool
 var loopDepth int
 
 type Options struct {
 	PrintOutput io.Writer
+}
+
+type Callable struct {
+	arity int
+	call func([]interface{}) interface{}
 }
 
 var InterpreterOptions = &Options{PrintOutput: os.Stdout}
@@ -29,6 +37,13 @@ type RuntimeError struct {
 }
 
 func Interpret(statements []ast.Stmt) error {
+	// define native functions
+	global.Define("clock", Callable{
+		arity: 0,
+		call: func(args []interface{}) interface{} {
+			return float64(time.Now().UnixMilli() / 1000)
+		},
+	})
 	for _, statement := range statements {
 		err := execute(statement)
 		if err != nil {
@@ -160,6 +175,26 @@ func execute(statement ast.Stmt) error {
 		breakHit = true
 	case *ast.Continue:
 		continueHit = true
+	case *ast.Call:
+		callee, err := evaluate(s.Callee)
+		if err != nil {
+			return err
+		}
+		arguments := make([]interface{}, 0)
+		for _, arg := range s.Arguments {
+			argument, err := evaluate(arg)
+			if err != nil {
+				return err
+			}
+			arguments = append(arguments, argument)
+		}
+		function, ok := callee.(Callable)
+		if !ok {
+			return &RuntimeError{line: s.Paren.Line, message: "Can only call functions"}
+		}
+		if len(arguments) != function.arity {
+			return &RuntimeError{line: s.Paren.Line, message: "Expected " + strconv.Itoa(function.arity) + " arguments but got " + strconv.Itoa(len(arguments))}
+		}
 	}
 	return nil
 }
