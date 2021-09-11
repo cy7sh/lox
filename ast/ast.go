@@ -179,3 +179,9 @@ func (c *Call) String() string {
 	}
 	return sb.String()
 }
+
+type Function struct {
+	Name token.Token
+	Parameters []token.Token
+	Body []Stmt
+}

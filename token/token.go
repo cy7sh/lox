@@ -40,7 +40,7 @@ const (
 	CLASS
 	ELSE
 	FALSE
-	FUN
+	FUNCTION
 	FOR
 	IF
 	NULL

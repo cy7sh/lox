@@ -10,7 +10,10 @@ import (
 
 /*
 program        → block* EOF
-declaration    → varDecl | statement
+declaration    → funDecl | varDecl | statement
+funDecl        → "function" function
+function       → IDENTIFIER "(" parameters? ")" block
+parameters     → IDENTIFIER ("," IDENTIFIER )*
 varDecl        → "var" IDENTIFIER ("=" expression)? ";"
 statement      → exprStmt | printStmt | block | forStmt | break
 break          → "break" ";"
@@ -63,6 +66,21 @@ func (p *Parser) declaration() ast.Stmt {
 		p.consume(token.SEMICOLON, "Expected \";\" after variable declaration")
 		return &ast.Var{Name: name, Initializer: initializer}
 	}
+	if p.match(token.FUNCTION) {
+		name := p.consume(token.IDENTIFIER, "Expected function name")
+		p.consume(token.LEFT_PAREN, "Expected \"(\" after function name")
+		parameters := make([]token.Token, 0)
+		for {
+			param := p.consume(token.IDENTIFIER, "Expected parameter")
+			parameters = append(parameters, param)
+			if p.match(token.RIGHT_PAREN) {
+				break
+			}
+			p.consume(token.COMMA, "Expected \",\" after parameter")
+		}
+		body := p.block().Statements
+		return &ast.Function{Name: name, Parameters: parameters, Body: body}
+	}
 	return p.statement()
 }
 
@@ -84,12 +102,7 @@ func (p *Parser) statement() ast.Stmt {
 		return &ast.If{Condition: condition, ElseBranch: elseBranch, ThenBranch: thenBranch}
 	}
 	if p.match(token.LEFT_BRACE) {
-		var statements []ast.Stmt
-		for !p.check(token.RIGHT_BRACE) && !p.isAtEnd() {
-			statements = append(statements, p.declaration())
-		}
-		p.consume(token.RIGHT_BRACE, "Expected \"}\" after block")
-		return &ast.Block{Statements: statements}
+		return p.block()
 	}
 	if p.match(token.BREAK) {
 		p.consume(token.SEMICOLON, "Expected \";\" after \"break\"")
@@ -148,6 +161,15 @@ func (p *Parser) expressionStatement() ast.Stmt {
 	}
 	p.consume(token.SEMICOLON, "Expected \";\" after expression")
 	return &ast.ExprStmt{Expression: expr}
+}
+
+func (p *Parser) block() *ast.Block {
+	var statements []ast.Stmt
+	for !p.check(token.RIGHT_BRACE) && !p.isAtEnd() {
+		statements = append(statements, p.declaration())
+	}
+	p.consume(token.RIGHT_BRACE, "Expected \"}\" after block")
+	return &ast.Block{Statements: statements}
 }
 
 func (p *Parser) expression() ast.Expr {
@@ -312,7 +334,7 @@ func (p *Parser) synchronize() {
 		}
 		switch(p.peek().Type) {
 		case token.CLASS:
-		case token.FUN:
+		case token.FUNCTION:
 		case token.VAR:
 		case token.FOR:
 		case token.IF:
