@@ -23,11 +23,6 @@ type Options struct {
 	PrintOutput io.Writer
 }
 
-type Callable struct {
-	arity int
-	call func([]interface{}) interface{}
-}
-
 var InterpreterOptions = &Options{PrintOutput: os.Stdout}
 
 type RuntimeError struct {
@@ -38,10 +33,10 @@ type RuntimeError struct {
 
 func Interpret(statements []ast.Stmt) error {
 	// define native functions
-	global.Define("clock", Callable{
-		arity: 0,
-		call: func(args []interface{}) interface{} {
-			return time.Now().UnixMilli()
+	global.Define("clock", nativeFunction{
+		arityNum: 0,
+		nativeCallable: func(args []interface{}) (interface{}, error) {
+			return time.Now().UnixMilli(), nil
 		},
 	})
 	for _, statement := range statements {
@@ -175,6 +170,9 @@ func execute(statement ast.Stmt) error {
 		breakHit = true
 	case *ast.Continue:
 		continueHit = true
+	case *ast.Function:
+		function := &userFunction{delcaration: s}
+		env.Define(s.Name.Lexeme, function)
 	}
 	return nil
 }
@@ -345,14 +343,14 @@ func evaluate(node ast.Expr) (interface{}, error) {
 				}
 				arguments = append(arguments, argument)
 			}
-			function, ok := callee.(Callable)
+			function, ok := callee.(callable)
 			if !ok {
 				return nil, &RuntimeError{line: n.Paren.Line, message: "Can only call functions"}
 			}
-			if len(arguments) != function.arity {
-				return nil, &RuntimeError{line: n.Paren.Line, message: "Expected " + strconv.Itoa(function.arity) + " arguments but got " + strconv.Itoa(len(arguments))}
+			if len(arguments) != function.arity() {
+				return nil, &RuntimeError{line: n.Paren.Line, message: "Expected " + strconv.Itoa(function.arity()) + " arguments but got " + strconv.Itoa(len(arguments))}
 			}
-			return function.call(arguments), nil
+			return function.call(arguments)
 	}
 	return nil, &RuntimeError{message: "Error evaluating expression"}
 }

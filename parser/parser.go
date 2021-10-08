@@ -11,7 +11,7 @@ import (
 /*
 program        → block* EOF
 declaration    → funDecl | varDecl | statement
-funDecl        → "function" function
+funDecl        → "fun" function
 function       → IDENTIFIER "(" parameters? ")" block
 parameters     → IDENTIFIER ("," IDENTIFIER )*
 varDecl        → "var" IDENTIFIER ("=" expression)? ";"
@@ -66,7 +66,7 @@ func (p *Parser) declaration() ast.Stmt {
 		p.consume(token.SEMICOLON, "Expected \";\" after variable declaration")
 		return &ast.Var{Name: name, Initializer: initializer}
 	}
-	if p.match(token.FUNCTION) {
+	if p.match(token.FUN) {
 		name := p.consume(token.IDENTIFIER, "Expected function name")
 		p.consume(token.LEFT_PAREN, "Expected \"(\" after function name")
 		parameters := make([]token.Token, 0)
@@ -335,7 +335,7 @@ func (p *Parser) synchronize() {
 		}
 		switch(p.peek().Type) {
 		case token.CLASS:
-		case token.FUNCTION:
+		case token.FUN:
 		case token.VAR:
 		case token.FOR:
 		case token.IF:

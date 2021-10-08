@@ -7,12 +7,18 @@ import (
 	"github.com/singurty/lox/environment"
 	"github.com/singurty/lox/parser"
 	"github.com/singurty/lox/scanner"
-//	"github.com/augustoroman/hexdump" // to debug minor differences in text comparison
+	//	"github.com/augustoroman/hexdump" // to debug minor differences in text comparison
 )
+
+type tests []struct {
+	input string
+	expected string
+}
 
 func runTest(source string, t *testing.T) {
 	// reset environment
 	env = environment.Global()
+	global = env
 	scan := scanner.New(source)
 	tokens := scan.ScanTokens()
 	if scan.HadError {
@@ -23,7 +29,10 @@ func runTest(source string, t *testing.T) {
 		t.Fatal("parser error")
 	}
 	statements := parse.Parse()
-	Interpret(statements)
+	err := Interpret(statements)
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestVariable(t *testing.T) {
@@ -293,10 +302,7 @@ while
 }
 
 func TestContinue(t *testing.T) {
-	tests := []struct {
-		input		string
-		expected	string
-	}{
+	tests := tests{
 		{`
 			var a = 1;
 			while (a < 10) {
@@ -316,6 +322,51 @@ func TestContinue(t *testing.T) {
 				print a;
 			}
 			`, "9"},
+	}
+	for _, test := range tests {
+		testInterpreterOutput(test.input, test.expected, t)
+	}
+}
+
+func TestFunction(t *testing.T) {
+	tests := tests{
+		{
+`
+fun sayHi(first, last) {
+	print "Hi, " + first + " " + last + "!";
+}
+sayHi("Dear", "Reader");
+`,
+`
+Hi, Dear Reader!
+`,
+		},
+		{
+`
+fun count(n) {
+	if (n > 1) count(n - 1);
+	print n;
+}
+count(3);
+`,
+`
+1
+2
+3
+`,
+		},
+		{
+`
+fun add(a, b, c) {
+	print a + b + c;
+}
+add(1, 2, 3);
+
+`,
+`
+6
+`,
+		},
 	}
 	for _, test := range tests {
 		testInterpreterOutput(test.input, test.expected, t)

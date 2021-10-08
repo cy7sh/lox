@@ -59,9 +59,6 @@ func run(source string) error {
 	if scanner.HadError {
 		return errors.New("scanner error")
 	}
-	//for _, token := range tokens{
-	//	fmt.Println(token.String())
-	//}
 	parser := parser.New(tokens)
 	statements := parser.Parse()
 	if parser.HadError {
