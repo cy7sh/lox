@@ -144,6 +144,18 @@ func (l *Logical) String() string {
 	return sb.String()
 }
 
+type Lambda struct {
+	Parameters []token.Token
+	Body []Stmt
+
+}
+
+func (l *Lambda) String() string {
+	var sb strings.Builder
+	sb.WriteString("lambda parameters: ")
+	return sb.String()
+}
+
 type While struct {
 	Condition Expr
 	Body Stmt

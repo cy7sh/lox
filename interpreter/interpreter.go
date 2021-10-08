@@ -175,7 +175,7 @@ func execute(statement ast.Stmt) error {
 	case *ast.Continue:
 		continueHit = true
 	case *ast.Function:
-		function := &userFunction{delcaration: s, closure: env}
+		function := &userFunction{declaration: s, closure: env}
 		env.Define(s.Name.Lexeme, function)
 	case *ast.Return:
 		value, err := evaluate(s.Value)
@@ -362,6 +362,8 @@ func evaluate(node ast.Expr) (interface{}, error) {
 				return nil, &runtimeError{line: n.Paren.Line, message: "Expected " + strconv.Itoa(function.arity()) + " arguments but got " + strconv.Itoa(len(arguments))}
 			}
 			return function.call(arguments)
+		case *ast.Lambda:
+			return &lambda{declaration: n, closure: env}, nil
 	}
 	return nil, &runtimeError{message: "Error evaluating expression"}
 }

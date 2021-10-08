@@ -142,3 +142,21 @@ Output:
 4
 5
 ```
+### Lambda (Anonymous function)
+```
+fun thrice(fn) {
+  for (var i = 1; i <= 3; i = i + 1) {
+    fn(i);
+  }
+}
+
+thrice(fun (a) {
+  print a;
+});
+```
+Output:
+```
+1
+2
+3
+```

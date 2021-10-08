@@ -34,6 +34,7 @@ comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )*
 term           → factor ( ( "-" | "+" ) factor )*
 factor         → unary ( ( "/" | "*" ) unary )*
 unary          → ( "!" | "-" ) unary | primary | call
+lambda        → "fun" "(" parameters? ")" block
 call           → primary ( "(" arguments? ")" )*
 arguments      → expression ("," expression)*
 primary        → NUMBER | STRING | IDENTIFIER | "true" | "false" | "nil" | "(" expression ")"
@@ -281,6 +282,26 @@ func (p *Parser) unary() ast.Expr {
 		operator := p.previous()
 		right := p.unary()
 		expr := &ast.Unary{Operator: operator, Right: right}
+		return expr
+	}
+	return p.lambda()
+}
+
+func (p *Parser) lambda() ast.Expr {
+	if p.match(token.FUN) {
+		p.consume(token.LEFT_PAREN, "Expected \"(\" after \"fun\"")
+		parameters := make([]token.Token, 0)
+		for !p.match(token.RIGHT_PAREN){
+			param := p.consume(token.IDENTIFIER, "Expected parameter")
+			parameters = append(parameters, param)
+			if p.match(token.RIGHT_PAREN) {
+				break
+			}
+			p.consume(token.COMMA, "Expected \",\" after parameter")
+		}
+		p.consume(token.LEFT_BRACE, "Expected \"{\" before function body")
+		body := p.block().Statements
+		expr := &ast.Lambda{Parameters: parameters, Body: body}
 		return expr
 	}
 	return p.call()

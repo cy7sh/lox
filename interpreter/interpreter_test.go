@@ -368,6 +368,7 @@ add(1, 2, 3);
 `,
 		},
 		{
+// recursion
 `
 fun fib(n) {
 	if (n <= 1) return n;
@@ -402,6 +403,7 @@ for (var i = 0; i < 20; i = i + 1) {
 `,
 		},
 		{
+// closure
 `
 fun makeCounter() {
   var i = 0;
@@ -426,6 +428,25 @@ counter();
 3
 4
 5
+`,
+		},
+		{
+// lambda
+`
+fun thrice(fn) {
+  for (var i = 1; i <= 3; i = i + 1) {
+    fn(i);
+  }
+}
+
+thrice(fun (a) {
+  print a;
+});
+`,
+`
+1
+2
+3
 `,
 		},
 	}
