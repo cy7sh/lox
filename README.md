@@ -115,3 +115,30 @@ Output:
 2584
 4181
 ```
+### Closure
+```
+fun makeCounter() {
+  var i = 0;
+  fun count() {
+    i = i + 1;
+    print i;
+  }
+
+  return count;
+}
+
+var counter = makeCounter();
+counter();
+counter();
+counter();
+counter();
+counter();
+```
+Output:
+```
+1
+2
+3
+4
+5
+```
