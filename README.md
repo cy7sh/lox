@@ -1,5 +1,11 @@
 The best language in the universe (yep, aliens too)
 
+## Usage
+```
+$ lox [filename]
+```
+Starts an interactive shell if `filename` is omitted.
+
 ## Documentation
 #### Variable
 - Delcaration
@@ -73,4 +79,39 @@ false
 ### Ternary operator
 ```
 <condition> ? <if expression> : <else expression>
+```
+
+### Function
+```
+fun fib(n) {
+	if (n <= 1) return n;
+	return fib(n - 2) + fib(n - 1);
+}
+
+for (var i = 0; i < 20; i = i + 1) {
+	print fib(i);
+}
+```
+Output:
+```
+0
+1
+1
+2
+3
+5
+8
+13
+21
+34
+55
+89
+144
+233
+377
+610
+987
+1597
+2584
+4181
 ```
