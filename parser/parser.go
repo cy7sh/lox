@@ -23,11 +23,11 @@ ifStmt         → "if " "(" expression ")" statement ("else" statement)?
 block          → "{" declaration* "}"
 exprStmt       → expression ";"
 printStmt      → "print" expression ";"
-expression     → ternary
+expression     → assignment
 assignment     → IDENTIFIER "=" assignment | logic_or
 logic_or       → logic_and ("or" logic_and)*
 logic_and      → ternary ("and" ternary)*
-ternary        → equality ? equality : equality
+ternary        → equality "?" equality ":" equality
 equality       → comparison ( ( "!=" | "==" ) comparison )*
 comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )*
 term           → factor ( ( "-" | "+" ) factor )*
@@ -78,6 +78,7 @@ func (p *Parser) declaration() ast.Stmt {
 			}
 			p.consume(token.COMMA, "Expected \",\" after parameter")
 		}
+		p.consume(token.LEFT_BRACE, "Expected \"{\" before function body")
 		body := p.block().Statements
 		return &ast.Function{Name: name, Parameters: parameters, Body: body}
 	}

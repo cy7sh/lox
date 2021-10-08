@@ -41,7 +41,7 @@ func Interpret(statements []ast.Stmt) error {
 	global.Define("clock", Callable{
 		arity: 0,
 		call: func(args []interface{}) interface{} {
-			return float64(time.Now().UnixMilli() / 1000)
+			return time.Now().UnixMilli()
 		},
 	})
 	for _, statement := range statements {
@@ -175,26 +175,6 @@ func execute(statement ast.Stmt) error {
 		breakHit = true
 	case *ast.Continue:
 		continueHit = true
-	case *ast.Call:
-		callee, err := evaluate(s.Callee)
-		if err != nil {
-			return err
-		}
-		arguments := make([]interface{}, 0)
-		for _, arg := range s.Arguments {
-			argument, err := evaluate(arg)
-			if err != nil {
-				return err
-			}
-			arguments = append(arguments, argument)
-		}
-		function, ok := callee.(Callable)
-		if !ok {
-			return &RuntimeError{line: s.Paren.Line, message: "Can only call functions"}
-		}
-		if len(arguments) != function.arity {
-			return &RuntimeError{line: s.Paren.Line, message: "Expected " + strconv.Itoa(function.arity) + " arguments but got " + strconv.Itoa(len(arguments))}
-		}
 	}
 	return nil
 }
@@ -352,6 +332,27 @@ func evaluate(node ast.Expr) (interface{}, error) {
 			} else {
 				return evaluate(n.Else)
 			}
+		case *ast.Call:
+			callee, err := evaluate(n.Callee)
+			if err != nil {
+				return nil, err
+			}
+			arguments := make([]interface{}, 0)
+			for _, arg := range n.Arguments {
+				argument, err := evaluate(arg)
+				if err != nil {
+					return nil, err
+				}
+				arguments = append(arguments, argument)
+			}
+			function, ok := callee.(Callable)
+			if !ok {
+				return nil, &RuntimeError{line: n.Paren.Line, message: "Can only call functions"}
+			}
+			if len(arguments) != function.arity {
+				return nil, &RuntimeError{line: n.Paren.Line, message: "Expected " + strconv.Itoa(function.arity) + " arguments but got " + strconv.Itoa(len(arguments))}
+			}
+			return function.call(arguments), nil
 	}
 	return nil, &RuntimeError{message: "Error evaluating expression"}
 }
