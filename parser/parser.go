@@ -71,7 +71,7 @@ func (p *Parser) declaration() ast.Stmt {
 		name := p.consume(token.IDENTIFIER, "Expected function name")
 		p.consume(token.LEFT_PAREN, "Expected \"(\" after function name")
 		parameters := make([]token.Token, 0)
-		for {
+		for !p.match(token.RIGHT_PAREN){
 			param := p.consume(token.IDENTIFIER, "Expected parameter")
 			parameters = append(parameters, param)
 			if p.match(token.RIGHT_PAREN) {

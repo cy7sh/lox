@@ -32,6 +32,7 @@ func (n *nativeFunction) String() string {
 
 type userFunction struct {
 	delcaration *ast.Function
+	closure *environment.Environment
 }
 
 func (u *userFunction) arity() int {
@@ -43,7 +44,7 @@ func (u *userFunction) String() string {
 }
 
 func (u *userFunction) call(arguments []interface{}) (interface{}, error) {
-	envFun := environment.Local(global)
+	envFun := environment.Local(u.closure)
 	for i := 0; i < u.arity(); i++ {
 		envFun.Define(u.delcaration.Parameters[i].Lexeme, arguments[i])
 	}

@@ -175,7 +175,7 @@ func execute(statement ast.Stmt) error {
 	case *ast.Continue:
 		continueHit = true
 	case *ast.Function:
-		function := &userFunction{delcaration: s}
+		function := &userFunction{delcaration: s, closure: env}
 		env.Define(s.Name.Lexeme, function)
 	case *ast.Return:
 		value, err := evaluate(s.Value)

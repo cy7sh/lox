@@ -401,6 +401,33 @@ for (var i = 0; i < 20; i = i + 1) {
 4181
 `,
 		},
+		{
+`
+fun makeCounter() {
+  var i = 0;
+  fun count() {
+    i = i + 1;
+    print i;
+  }
+
+  return count;
+}
+
+var counter = makeCounter();
+counter();
+counter();
+counter();
+counter();
+counter();
+`,
+`
+1
+2
+3
+4
+5
+`,
+		},
 	}
 	for _, test := range tests {
 		testInterpreterOutput(test.input, test.expected, t)
