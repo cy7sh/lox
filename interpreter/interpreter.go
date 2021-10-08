@@ -25,10 +25,14 @@ type Options struct {
 
 var InterpreterOptions = &Options{PrintOutput: os.Stdout}
 
-type RuntimeError struct {
+type runtimeError struct {
 	line int
 	where string
 	message string
+}
+
+type returnError struct {
+	value interface{}
 }
 
 func Interpret(statements []ast.Stmt) error {
@@ -71,7 +75,7 @@ func execute(statement ast.Stmt) error {
 		if s.Initializer == nil {
 			err := env.Define(s.Name.Lexeme, nil)
 			if err != nil {
-				return &RuntimeError{line: s.Name.Line, message:err.Error()}
+				return &runtimeError{line: s.Name.Line, message:err.Error()}
 			}
 		} else {
 			value, err := evaluate(s.Initializer)
@@ -80,7 +84,7 @@ func execute(statement ast.Stmt) error {
 			}
 			err = env.Define(s.Name.Lexeme, value)
 			if err != nil {
-				return &RuntimeError{line: s.Name.Line, message:err.Error()}
+				return &runtimeError{line: s.Name.Line, message:err.Error()}
 			}
 		}
 	case *ast.Block:
@@ -173,6 +177,12 @@ func execute(statement ast.Stmt) error {
 	case *ast.Function:
 		function := &userFunction{delcaration: s}
 		env.Define(s.Name.Lexeme, function)
+	case *ast.Return:
+		value, err := evaluate(s.Value)
+		if err != nil {
+			return err
+		}
+		return &returnError{value: value}
 	}
 	return nil
 }
@@ -183,6 +193,7 @@ func executeBlock(statements []ast.Stmt, environment *environment.Environment) e
 	for _, statement := range statements {
 		err := execute(statement)
 		if err != nil {
+			env = previous
 			return err
 		}
 	}
@@ -197,7 +208,7 @@ func evaluate(node ast.Expr) (interface{}, error) {
 		case *ast.Variable:
 			value, err := env.Get(n.Name.Lexeme)
 			if err != nil {
-				return nil, &RuntimeError{line: n.Name.Line, message: err.Error()}
+				return nil, &runtimeError{line: n.Name.Line, message: err.Error()}
 			}
 			return value, nil
 		case *ast.Assign:
@@ -207,7 +218,7 @@ func evaluate(node ast.Expr) (interface{}, error) {
 			}
 			err = env.Assign(n.Name.Lexeme, value)
 			if err != nil {
-				return nil, &RuntimeError{line: n.Name.Line, message: err.Error()}
+				return nil, &runtimeError{line: n.Name.Line, message: err.Error()}
 			}
 			return value, nil
 		case *ast.Grouping:
@@ -249,7 +260,7 @@ func evaluate(node ast.Expr) (interface{}, error) {
 						return nil, err
 					}
 					if right.(float64) == 0 {
-						return nil, &RuntimeError{line: n.Operator.Line, where: n.Operator.Lexeme, message: "Divide by zero"}
+						return nil, &runtimeError{line: n.Operator.Line, where: n.Operator.Lexeme, message: "Divide by zero"}
 					}
 					return left.(float64) / right.(float64), nil
 				case token.STAR:
@@ -271,7 +282,7 @@ func evaluate(node ast.Expr) (interface{}, error) {
 								return l + r, nil
 							}
 					}
-					return nil, &RuntimeError{line: n.Operator.Line, where: n.Operator.Lexeme, message: "Operands must be eithier numbers or strings"}
+					return nil, &runtimeError{line: n.Operator.Line, where: n.Operator.Lexeme, message: "Operands must be eithier numbers or strings"}
 				case token.GREATER:
 					err := checkNumberOperands(n.Operator, right, left)
 					if err != nil {
@@ -345,27 +356,31 @@ func evaluate(node ast.Expr) (interface{}, error) {
 			}
 			function, ok := callee.(callable)
 			if !ok {
-				return nil, &RuntimeError{line: n.Paren.Line, message: "Can only call functions"}
+				return nil, &runtimeError{line: n.Paren.Line, message: "Can only call functions"}
 			}
 			if len(arguments) != function.arity() {
-				return nil, &RuntimeError{line: n.Paren.Line, message: "Expected " + strconv.Itoa(function.arity()) + " arguments but got " + strconv.Itoa(len(arguments))}
+				return nil, &runtimeError{line: n.Paren.Line, message: "Expected " + strconv.Itoa(function.arity()) + " arguments but got " + strconv.Itoa(len(arguments))}
 			}
 			return function.call(arguments)
 	}
-	return nil, &RuntimeError{message: "Error evaluating expression"}
+	return nil, &runtimeError{message: "Error evaluating expression"}
 }
 
-func (err *RuntimeError) Error() string {
+func (err *runtimeError) Error() string {
 	if err.where == "" {
-		return fmt.Sprintf("[Line %v] RuntimeError: %v", err.line, err.message)
+		return fmt.Sprintf("[Line %v] runtimeError: %v", err.line, err.message)
 	}
-	return fmt.Sprintf("[Line %v] RuntimeError at \"%v\": %v", err.line, err.where, err.message)
+	return fmt.Sprintf("[Line %v] runtimeError at \"%v\": %v", err.line, err.where, err.message)
+}
+
+func (err *returnError) Error() string{
+	return fmt.Sprintf("return value: %v", err.value)
 }
 
 func checkNumberOperand(operator token.Token, operand interface{}) error {
 	_, ok := operand.(float64)
 	if !ok {
-		return &RuntimeError{line: operator.Line, where: operator.Lexeme, message: "Operand must be a number"}
+		return &runtimeError{line: operator.Line, where: operator.Lexeme, message: "Operand must be a number"}
 	}
 	return nil
 }
@@ -373,11 +388,11 @@ func checkNumberOperand(operator token.Token, operand interface{}) error {
 func checkNumberOperands(operator token.Token, operand1, operand2 interface{}) error {
 	_, ok := operand1.(float64)
 	if !ok {
-		return &RuntimeError{line: operator.Line, where: operator.Lexeme, message:"Operand must be a number"}
+		return &runtimeError{line: operator.Line, where: operator.Lexeme, message:"Operand must be a number"}
 	}
 	_, ok = operand2.(float64)
 	if !ok {
-		return &RuntimeError{line: operator.Line, where: operator.Lexeme, message:"Operand must be a number"}
+		return &runtimeError{line: operator.Line, where: operator.Lexeme, message:"Operand must be a number"}
 	}
 	return nil
 }

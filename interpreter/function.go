@@ -47,5 +47,14 @@ func (u *userFunction) call(arguments []interface{}) (interface{}, error) {
 	for i := 0; i < u.arity(); i++ {
 		envFun.Define(u.delcaration.Parameters[i].Lexeme, arguments[i])
 	}
-	return nil, executeBlock(u.delcaration.Body, envFun)
+	err := executeBlock(u.delcaration.Body, envFun)
+	if err != nil {
+		returnValue, ok := err.(*returnError)
+		if ok {
+			return returnValue.value, nil
+		} else {
+			return nil, err
+		}
+	}
+	return nil, nil
 }

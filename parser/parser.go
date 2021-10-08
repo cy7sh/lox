@@ -15,7 +15,7 @@ funDecl        → "fun" function
 function       → IDENTIFIER "(" parameters? ")" block
 parameters     → IDENTIFIER ("," IDENTIFIER )*
 varDecl        → "var" IDENTIFIER ("=" expression)? ";"
-statement      → exprStmt | printStmt | block | forStmt | break
+statement      → exprStmt | printStmt | block | forStmt | break | returnStmt
 break          → "break" ";"
 forStmt        → "for" "(" (varDecl | exprStmt | ";") expression? ";" expression? ")" statement
 whileStmt      → "while" "(" expression ")" statement
@@ -23,6 +23,7 @@ ifStmt         → "if " "(" expression ")" statement ("else" statement)?
 block          → "{" declaration* "}"
 exprStmt       → expression ";"
 printStmt      → "print" expression ";"
+returnStmt     → "return" expression? ";"
 expression     → assignment
 assignment     → IDENTIFIER "=" assignment | logic_or
 logic_or       → logic_and ("or" logic_and)*
@@ -149,6 +150,15 @@ func (p *Parser) statement() ast.Stmt {
 		statements := make([]ast.Stmt, 1)
 		statements[0] = loop
 		return &ast.Block{Statements: statements}
+	}
+	if p.match(token.RETURN) {
+		keyword := p.previous()
+		var value ast.Expr
+		if !p.check(token.SEMICOLON) {
+			value = p.expression()
+		}
+		p.consume(token.SEMICOLON, "Expected \";\" after return value")
+		return &ast.Return{Keyword: keyword, Value: value}
 	}
 	return p.expressionStatement()
 }

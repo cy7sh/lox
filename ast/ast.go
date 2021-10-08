@@ -185,3 +185,8 @@ type Function struct {
 	Parameters []token.Token
 	Body []Stmt
 }
+
+type Return struct {
+	Keyword token.Token
+	Value Expr
+}
