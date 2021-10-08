@@ -115,7 +115,7 @@ Output:
 2584
 4181
 ```
-### Closure
+#### Closure
 ```
 fun makeCounter() {
   var i = 0;
