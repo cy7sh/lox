@@ -27,14 +27,23 @@ func (e *Environment) Define(variable string, value interface{}) error {
 }
 
 func (e *Environment) Assign(variable string, value interface{}) error {
-	_, ok := e.environment[variable]
-	if ok {
+	if _, ok := e.environment[variable]; ok {
 		e.environment[variable] = value
 		return nil
 	} else {
 		if e.enclosing != nil {
 			return e.enclosing.Assign(variable, value)
 		}
+		return errors.New("Undefined variable \"" + variable + "\"")
+	}
+}
+
+func (e *Environment) AssignAt(distance int, variable string, value interface{}) error {
+	env := e.ancestor(distance).environment
+	if _, ok := env[variable]; ok {
+		env[variable] = value
+		return nil
+	} else {
 		return errors.New("Undefined variable \"" + variable + "\"")
 	}
 }
@@ -52,4 +61,23 @@ func (e *Environment) Get(variable string) (interface{}, error) {
 		}
 		return nil, errors.New("Undefined variable \"" + variable + "\"")
 	}
+}
+
+func (e *Environment) GetAt(distance int, variable string) (interface{}, error) {
+	if value, ok := e.ancestor(distance).environment[variable]; ok {
+		if value == nil {
+			return nil, errors.New("Uninitialized variable \"" + variable + "\"")
+		}
+		return value, nil
+	} else {
+		return nil, errors.New("Undefined variable \"" + variable + "\"")
+	}
+}
+
+func (e *Environment) ancestor(distance int) *Environment {
+	env := e
+	for i := 0; i < distance; i++ {
+		env = env.enclosing
+	}
+	return env
 }

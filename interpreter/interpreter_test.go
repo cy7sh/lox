@@ -4,8 +4,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/singurty/lox/ast"
 	"github.com/singurty/lox/environment"
 	"github.com/singurty/lox/parser"
+	"github.com/singurty/lox/resolver"
 	"github.com/singurty/lox/scanner"
 	//	"github.com/augustoroman/hexdump" // to debug minor differences in text comparison
 )
@@ -19,6 +21,7 @@ func runTest(source string, t *testing.T) {
 	// reset environment
 	env = environment.Global()
 	global = env
+	locals = make(map[ast.Expr]int)
 	scan := scanner.New(source)
 	tokens := scan.ScanTokens()
 	if scan.HadError {
@@ -29,7 +32,12 @@ func runTest(source string, t *testing.T) {
 		t.Fatal("parser error")
 	}
 	statements := parse.Parse()
-	err := Interpret(statements)
+	resolver := resolver.NewResolver()
+	err := resolver.Resolve(statements)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = Interpret(statements, resolver)
 	if err != nil {
 		t.Fatal(err)
 	}

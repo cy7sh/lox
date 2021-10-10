@@ -7,9 +7,10 @@ import (
 	"strconv"
 	"time"
 
-//	"github.com/davecgh/go-spew/spew" // to dump structs for debugging
+	//	"github.com/davecgh/go-spew/spew" // to dump structs for debugging
 	"github.com/singurty/lox/ast"
 	"github.com/singurty/lox/environment"
+	"github.com/singurty/lox/resolver"
 	"github.com/singurty/lox/token"
 )
 
@@ -18,6 +19,7 @@ var global = env // keep track of global environment
 var breakHit bool
 var continueHit bool
 var loopDepth int
+var locals map[ast.Expr]int
 
 type Options struct {
 	PrintOutput io.Writer
@@ -35,7 +37,8 @@ type returnError struct {
 	value interface{}
 }
 
-func Interpret(statements []ast.Stmt) error {
+func Interpret(statements []ast.Stmt, resolver *resolver.Resolver) error {
+	locals = resolver.Locals
 	// define native functions
 	global.Define("clock", &nativeFunction{
 		arityNum: 0,
@@ -50,6 +53,10 @@ func Interpret(statements []ast.Stmt) error {
 		}
 	}
 	return nil
+}
+
+func Resolve(expr ast.Expr, depth int) {
+	locals[expr] = depth
 }
 
 func execute(statement ast.Stmt) error {
@@ -206,7 +213,7 @@ func evaluate(node ast.Expr) (interface{}, error) {
 		case *ast.Literal:
 			return n.Value, nil
 		case *ast.Variable:
-			value, err := env.Get(n.Name.Lexeme)
+			value, err := lookUpVariable(n.Name.Lexeme, n)
 			if err != nil {
 				return nil, &runtimeError{line: n.Name.Line, message: err.Error()}
 			}
@@ -216,7 +223,8 @@ func evaluate(node ast.Expr) (interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
-			err = env.Assign(n.Name.Lexeme, value)
+			distance := locals[n]
+			err = env.AssignAt(distance, n.Name.Lexeme, value)
 			if err != nil {
 				return nil, &runtimeError{line: n.Name.Line, message: err.Error()}
 			}
@@ -366,6 +374,15 @@ func evaluate(node ast.Expr) (interface{}, error) {
 			return &lambda{declaration: n, closure: env}, nil
 	}
 	return nil, &runtimeError{message: "Error evaluating expression"}
+}
+
+func lookUpVariable(variable string, expr ast.Expr) (interface{}, error) {
+	distance, ok := locals[expr]
+	if ok {
+		return env.GetAt(distance, variable)
+	} else {
+		return global.Get(variable)
+	}
 }
 
 func (err *runtimeError) Error() string {

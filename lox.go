@@ -10,6 +10,7 @@ import (
 	"github.com/singurty/lox/interpreter"
 	"github.com/singurty/lox/parser"
 	"github.com/singurty/lox/scanner"
+	"github.com/singurty/lox/resolver"
 )
 
 func main() {
@@ -64,7 +65,12 @@ func run(source string) error {
 	if parser.HadError {
 		return errors.New("parser error")
 	}
-	err := interpreter.Interpret(statements)
+	resolver := resolver.NewResolver()
+	err := resolver.Resolve(statements)
+	if err != nil {
+		return err
+	}
+	err = interpreter.Interpret(statements, resolver)
 	if err != nil {
 		return err
 	}
