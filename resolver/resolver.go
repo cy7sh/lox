@@ -8,34 +8,46 @@ import (
 )
 
 type Resolver struct {
-	scopes []map[string]bool
+	scopes *stack
+	locals *stack
+}
+
+type stack struct {
+	data []map[interface{}]interface{}
 }
 
 func (r *Resolver) NewResolver() {
-	r.scopes = make([]map[string]bool, 0)
+	r.scopes.data = make([]map[interface{}]interface{}, 0)
 }
 
 // add new scope
-func (r *Resolver) push(entry map[string]bool) {
-	r.scopes = append(r.scopes, entry)
+func (s *stack) push(entry map[interface{}]interface{}) {
+	s.data = append(s.data, entry)
 }
 
 // remove current scope
-func (r *Resolver) pop() map[string]bool {
-	n := len(r.scopes) -1
-	entry := r.scopes[n]
-	r.scopes = r.scopes[:n]
+func (s *stack) pop() map[interface{}]interface{} {
+	n := len(s.data) -1
+	entry := s.data[n]
+	s.data = s.data[:n]
 	return entry
 }
 
-// add or change an entry on current scope
-func put(scope map[string]bool, name string, defined bool) {
-	scope[name] = defined
+// get the map at the top of the stack without removing it
+func (s *stack) peek() map[interface{}]interface{} {
+	return s.data[len(s.data) - 1]
 }
 
-// get the map at the top of the stack without removing it
-func (r *Resolver) peek() map[string]bool {
-	return r.scopes[len(r.scopes) - 1]
+func (s *stack) isEmpty() bool {
+	return len(s.data) == 0
+}
+
+func (s *stack) len() int {
+	return len(s.data)
+}
+
+func (s *stack) get(index int) map[interface{}]interface{} {
+	return s.data[index]
 }
 
 func (r *Resolver) blockStmt(block *ast.Block) {
@@ -44,7 +56,7 @@ func (r *Resolver) blockStmt(block *ast.Block) {
 }
 
 func (r *Resolver) beginScope() {
-	r.push(make(map[string]bool))
+	r.scopes.push(make(map[interface{}]interface{}))
 }
 
 func (r *Resolver) endScope() {
@@ -74,21 +86,21 @@ func (r *Resolver) varStmt(statement *ast.Var) {
 }
 
 func (r *Resolver) declare(name string) {
-	if len(r.scopes) == 0 {
+	if r.scopes.isEmpty() {
 		return
 	}
-	put(r.peek(), name, false)
+	r.scopes.peek()[name] = false
 }
 
 func (r *Resolver) define(name string) {
-	if len(r.scopes) == 0 {
+	if r.scopes.isEmpty() {
 		return
 	}
-	put(r.peek(), name, true)
+	r.scopes.peek()[name] = true
 }
 
 func (r *Resolver) variableExpr(expr *ast.Variable) error {
-	if len(r.scopes) > 0 && !r.peek()[expr.Name.Lexeme] {
+	if !r.scopes.isEmpty() && !r.scopes.peek()[expr.Name.Lexeme].(bool) {
 		return errors.New("Can't read local variable in its own initializer.")
 	}
 	r.resolveLocal(expr, expr.Name)
@@ -96,8 +108,8 @@ func (r *Resolver) variableExpr(expr *ast.Variable) error {
 }
 
 func (r *Resolver) resolveLocal(expr ast.Expr, name token.Token) {
-	for i := len(r.scopes) - 1; i >= 0; i-- {
-		if _, ok := r.scopes[i][name.Lexeme]; ok {
+	for i := r.scopes.len() - 1; i >= 0; i-- {
+		if _, ok := r.scopes.get(i)[name.Lexeme]; ok {
 //			interpreter.resolve(expr, len(r.scopes) - 1 - i)
 		}
 	}
