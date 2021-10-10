@@ -37,7 +37,7 @@ type returnError struct {
 
 func Interpret(statements []ast.Stmt) error {
 	// define native functions
-	global.Define("clock", nativeFunction{
+	global.Define("clock", &nativeFunction{
 		arityNum: 0,
 		nativeCallable: func(args []interface{}) (interface{}, error) {
 			return time.Now().UnixMilli(), nil
