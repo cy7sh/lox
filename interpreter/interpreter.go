@@ -223,8 +223,12 @@ func evaluate(node ast.Expr) (interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
-			distance := locals[n]
-			err = env.AssignAt(distance, n.Name.Lexeme, value)
+			distance, ok := locals[n]
+			if ok {
+				err = env.AssignAt(distance, n.Name.Lexeme, value)
+			} else {
+				err = global.Assign(n.Name.Lexeme, value)
+			}
 			if err != nil {
 				return nil, &runtimeError{line: n.Name.Line, message: err.Error()}
 			}
