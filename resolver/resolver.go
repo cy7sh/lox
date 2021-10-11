@@ -18,12 +18,14 @@ type Resolver struct {
 	stack []map[string]bool
 	Locals map[ast.Expr]int
 	currentFunction functionType
+	insideLoop bool
 }
 
 func NewResolver() *Resolver {
 	resolver := &Resolver{
 		stack: make([]map[string]bool, 0),
 		Locals: make(map[ast.Expr]int),
+		insideLoop: false,
 	}
 	return resolver
 }
@@ -111,6 +113,16 @@ func (r *Resolver) resolveStmt(statement ast.Stmt) error {
 		if err != nil {
 			return err
 		}
+	case *ast.Break:
+		err := r.breakStmt()
+		if err != nil {
+			return err
+		}
+	case *ast.Continue:
+		err := r.continueStmt()
+		if err != nil {
+			return err
+		}
 	default:
 		return errors.New("unknown statement")
 	}
@@ -139,6 +151,11 @@ func (r *Resolver) resolveExpr(expression ast.Expr) error {
 		if err != nil {
 			return err
 		}
+	case *ast.Lambda:
+		err := r.lambdaExpr(e)
+		if err != nil {
+			return err
+		}
 	case *ast.Grouping:
 		err := r.groupgingExpr(e)
 		if err != nil {
@@ -147,9 +164,6 @@ func (r *Resolver) resolveExpr(expression ast.Expr) error {
 	case *ast.Literal:
 		err := r.literalExpr(e)
 		if err != nil {
-		if err != nil {
-			return err
-		}
 			return err
 		}
 	case *ast.Logical:
@@ -301,15 +315,28 @@ func (r *Resolver) returnStmt(stmt *ast.Return) error {
 }
 
 func (r *Resolver) whileStmt(stmt *ast.While) error {
+	prevStatus := r.insideLoop
+	r.insideLoop = true
 	err := r.resolveExpr(stmt.Condition)
 	if err != nil {
 		return err
 	}
-	return r.resolveStmt(stmt.Body)
+	err = r.resolveStmt(stmt.Body)
+	if err != nil {
+		return err
+	}
+	r.insideLoop = prevStatus
+	return nil
 }
 
 func (r *Resolver) forStmt(stmt *ast.For) error {
-	err := r.resolveExpr(stmt.Condition)
+	prevStatus := r.insideLoop
+	r.insideLoop = true
+	err := r.resolveStmt(stmt.Initializer)
+	if err != nil {
+		return err
+	}
+	err = r.resolveExpr(stmt.Condition)
 	if err != nil {
 		return err
 	}
@@ -317,11 +344,26 @@ func (r *Resolver) forStmt(stmt *ast.For) error {
 	if err != nil {
 		return err
 	}
-	err = r.resolveStmt(stmt.Initializer)
+	err = r.resolveStmt(stmt.Body)
 	if err != nil {
 		return err
 	}
-	return r.resolveStmt(stmt.Body)
+	r.insideLoop = prevStatus
+	return nil
+}
+
+func (r *Resolver) breakStmt() error {
+	if r.insideLoop {
+		return nil
+	}
+	return errors.New("Cannot break outside of a loop")
+}
+
+func (r *Resolver) continueStmt() error {
+	if r.insideLoop {
+		return nil
+	}
+	return errors.New("Cannot continue outside of a loop")
 }
 
 func (r *Resolver) binaryExpr(expr *ast.Binary) error {
@@ -343,6 +385,26 @@ func (r *Resolver) callExpr(expr *ast.Call) error {
 			return err
 		}
 	}
+	return nil
+}
+
+func (r *Resolver) lambdaExpr(expr *ast.Lambda) error {
+	enclosingFunction := r.currentFunction
+	r.currentFunction = FUNCTION
+	r.beginScope()
+	for _, param := range expr.Parameters {
+		err := r.declare(param.Lexeme)
+		if err != nil {
+			return err
+		}
+		r.define(param.Lexeme)
+	}
+	err := r.Resolve(expr.Body)
+	if err != nil {
+		return err
+	}
+	r.endScope()
+	r.currentFunction = enclosingFunction
 	return nil
 }
 

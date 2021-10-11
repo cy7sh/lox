@@ -1,6 +1,7 @@
 package interpreter
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -458,7 +459,8 @@ thrice(fun (a) {
 `,
 		},
 	}
-	for _, test := range tests {
+	for i, test := range tests {
+		fmt.Printf("function index: %v\n", i)
 		testInterpreterOutput(test.input, test.expected, t)
 	}
 }
