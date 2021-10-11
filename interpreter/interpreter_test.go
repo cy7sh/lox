@@ -458,6 +458,25 @@ thrice(fun (a) {
 3
 `,
 		},
+		{
+// this is what our resolver should solve
+`
+var a = "global";
+{
+  fun showA() {
+    print a;
+  }
+
+  showA();
+  var a = "block";
+  showA();
+}
+`,
+`
+global
+global
+`,
+		},
 	}
 	for i, test := range tests {
 		fmt.Printf("function index: %v\n", i)
