@@ -192,7 +192,12 @@ func execute(statement ast.Stmt) error {
 		return &returnError{value: value}
 	case *ast.Class:
 		env.Define(s.Name.Lexeme, nil)
-		klass := newClass(s.Name.Lexeme)
+		methods := make(map[string]*userFunction)
+		for _, method := range s.Methods {
+			function := &userFunction{declaration: method, closure: env}
+			methods[method.Name.Lexeme] = function
+		}
+		klass := newClass(s.Name.Lexeme, methods)
 		env.Assign(s.Name.Lexeme, klass)
 	}
 	return nil

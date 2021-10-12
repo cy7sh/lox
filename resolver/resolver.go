@@ -12,6 +12,7 @@ type functionType int
 const (
 	NONE = iota
 	FUNCTION
+	METHOD
 )
 
 type Resolver struct {
@@ -225,6 +226,12 @@ func (r *Resolver) varStmt(statement *ast.Var) error {
 func (r *Resolver) classStmt(class *ast.Class) error {
 	r.declare(class.Name.Lexeme)
 	r.define(class.Name.Lexeme)
+	for _, method := range class.Methods {
+		err := r.resolveFunction(method, METHOD)
+		if err != nil {
+			return err
+		}
+	}
 	return r.declare(class.Name.Lexeme)
 }
 

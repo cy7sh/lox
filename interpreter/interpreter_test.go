@@ -1,7 +1,6 @@
 package interpreter
 
 import (
-	"fmt"
 	"strings"
 	"testing"
 
@@ -482,6 +481,7 @@ global
 func TestClass(t *testing.T) {
 	tests := testInputs{
 		{
+// test instance properties
 `
 class Bagel{}
 var bagel = Bagel();
@@ -492,13 +492,27 @@ print bagel.prop;
 property
 `,
 		},
+		{
+// test methods
+`
+class Bacon {
+  eat() {
+    print "Crunch crunch crunch!";
+  }
+}
+
+Bacon().eat();
+`,
+`
+Crunch crunch crunch!
+`,
+		},
 	}
 	testInterpreterOutputs(tests, t)
 }
 
 func testInterpreterOutputs(tests testInputs, t *testing.T) {
-	for i, test := range tests {
-		fmt.Printf("function index: %v\n", i)
+	for _, test := range tests {
 		testInterpreterOutput(test.input, test.expected, t)
 	}
 }
