@@ -96,6 +96,25 @@ func (a *Assign) String() string {
 	return sb.String()
 }
 
+type Get struct {
+	Name token.Token
+	Object Expr
+}
+
+func (g *Get) String() string {
+	return fmt.Sprintf("(get %v)", g.Name.Lexeme)
+}
+
+type Set struct {
+	Name token.Token
+	Object Expr
+	Value Expr
+}
+
+func (s *Set) String() string {
+	return fmt.Sprintf("(set %v %v)", s.Name.Lexeme, s.Value)
+}
+
 type Stmt interface {
 }
 
@@ -201,4 +220,9 @@ type Function struct {
 type Return struct {
 	Keyword token.Token
 	Value Expr
+}
+
+type Class struct {
+	Name token.Token
+	Methods []*Function
 }

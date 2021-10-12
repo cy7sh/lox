@@ -6,8 +6,6 @@ import (
 	"github.com/singurty/lox/environment"
 )
 
-type loxCallable func([]interface{}) (interface{}, error)
-
 type callable interface {
 	arity() int
 	call([]interface{}) (interface{}, error)
@@ -15,7 +13,7 @@ type callable interface {
 }
 
 type nativeFunction struct {
-	nativeCallable loxCallable
+	nativeCallable func([]interface{}) (interface{}, error)
 	arityNum int
 }
 

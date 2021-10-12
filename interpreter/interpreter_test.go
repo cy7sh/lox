@@ -13,7 +13,7 @@ import (
 	//	"github.com/augustoroman/hexdump" // to debug minor differences in text comparison
 )
 
-type tests []struct {
+type testInputs []struct {
 	input string
 	expected string
 }
@@ -311,7 +311,7 @@ while
 }
 
 func TestContinue(t *testing.T) {
-	tests := tests{
+	tests := testInputs{
 		{`
 			var a = 1;
 			while (a < 10) {
@@ -332,13 +332,11 @@ func TestContinue(t *testing.T) {
 			}
 			`, "9"},
 	}
-	for _, test := range tests {
-		testInterpreterOutput(test.input, test.expected, t)
-	}
+	testInterpreterOutputs(tests, t)
 }
 
 func TestFunction(t *testing.T) {
-	tests := tests{
+	tests := testInputs{
 		{
 `
 fun sayHi(first, last) {
@@ -478,6 +476,27 @@ global
 `,
 		},
 	}
+	testInterpreterOutputs(tests, t)
+}
+
+func TestClass(t *testing.T) {
+	tests := testInputs{
+		{
+`
+class Bagel{}
+var bagel = Bagel();
+bagel.prop = "property";
+print bagel.prop;
+`,
+`
+property
+`,
+		},
+	}
+	testInterpreterOutputs(tests, t)
+}
+
+func testInterpreterOutputs(tests testInputs, t *testing.T) {
 	for i, test := range tests {
 		fmt.Printf("function index: %v\n", i)
 		testInterpreterOutput(test.input, test.expected, t)

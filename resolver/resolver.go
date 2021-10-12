@@ -83,6 +83,11 @@ func (r *Resolver) resolveStmt(statement ast.Stmt) error {
 		if err != nil {
 			return err
 		}
+	case *ast.Class:
+		err := r.classStmt(s)
+		if err != nil {
+			return err
+		}
 	case *ast.ExprStmt:
 		err := r.expressionStmt(s)
 		if err != nil {
@@ -141,6 +146,11 @@ func (r *Resolver) resolveExpr(expression ast.Expr) error {
 		if err != nil {
 			return err
 		}
+	case *ast.Set:
+		err := r.setExpr(e)
+		if err != nil {
+			return err
+		}
 	case *ast.Binary:
 		err := r.binaryExpr(e)
 		if err != nil {
@@ -148,6 +158,11 @@ func (r *Resolver) resolveExpr(expression ast.Expr) error {
 		}
 	case *ast.Call:
 		err := r.callExpr(e)
+		if err != nil {
+			return err
+		}
+	case *ast.Get:
+		err := r.resolveExpr(e.Object)
 		if err != nil {
 			return err
 		}
@@ -207,6 +222,12 @@ func (r *Resolver) varStmt(statement *ast.Var) error {
 	return nil
 }
 
+func (r *Resolver) classStmt(class *ast.Class) error {
+	r.declare(class.Name.Lexeme)
+	r.define(class.Name.Lexeme)
+	return r.declare(class.Name.Lexeme)
+}
+
 func (r *Resolver) declare(name string) error {
 	if len(r.stack) == 0 {
 		return nil
@@ -250,6 +271,18 @@ func (r *Resolver) assignExpr(expr *ast.Assign) error {
 		return err
 	}
 	return r.resolveLocal(expr, expr.Name)
+}
+
+func (r *Resolver) setExpr(expr *ast.Set) error {
+	err := r.resolveExpr(expr.Object)
+	if err != nil {
+		return err
+	}
+	err = r.resolveExpr(expr.Value)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *Resolver) functionStmt(stmt *ast.Function) error {

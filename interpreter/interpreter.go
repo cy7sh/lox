@@ -190,6 +190,10 @@ func execute(statement ast.Stmt) error {
 			return err
 		}
 		return &returnError{value: value}
+	case *ast.Class:
+		env.Define(s.Name.Lexeme, nil)
+		klass := newClass(s.Name.Lexeme)
+		env.Assign(s.Name.Lexeme, klass)
 	}
 	return nil
 }
@@ -233,6 +237,21 @@ func evaluate(node ast.Expr) (interface{}, error) {
 				return nil, &runtimeError{line: n.Name.Line, message: err.Error()}
 			}
 			return value, nil
+		case *ast.Set:
+			object, err := evaluate(n.Object)
+			if err != nil {
+				return nil, err
+			}
+			if object, ok := object.(*instance); ok {
+				value, err := evaluate(n.Value)
+				if err != nil {
+					return nil, err
+				}
+				object.set(n.Name.Lexeme, value)
+				return value, nil
+			} else {
+				return nil, &runtimeError{line: n.Name.Line, where: n.Name.Lexeme, message: "Only instances have fields."}
+			}
 		case *ast.Grouping:
 			return evaluate(n.Expression)
 		case *ast.Unary:
@@ -376,6 +395,16 @@ func evaluate(node ast.Expr) (interface{}, error) {
 			return function.call(arguments)
 		case *ast.Lambda:
 			return &lambda{declaration: n, closure: env}, nil
+		case *ast.Get:
+			object, err := evaluate(n.Object)
+			if err != nil {
+				return nil, err
+			}
+			if object, ok := object.(*instance); ok {
+				return object.get(n.Name)
+			} else {
+				return nil, &runtimeError{line: n.Name.Line, where: n.Name.Lexeme, message: "Only instances have properties."}
+			}
 	}
 	return nil, &runtimeError{message: "Error evaluating expression"}
 }
@@ -391,13 +420,13 @@ func lookUpVariable(variable string, expr ast.Expr) (interface{}, error) {
 
 func (err *runtimeError) Error() string {
 	if err.where == "" {
-		return fmt.Sprintf("[Line %v] runtimeError: %v", err.line, err.message)
+		return fmt.Sprintf("[Line %v] RuntimeError: %v", err.line, err.message)
 	}
-	return fmt.Sprintf("[Line %v] runtimeError at \"%v\": %v", err.line, err.where, err.message)
+	return fmt.Sprintf("[Line %v] RuntimeError at \"%v\": %v", err.line, err.where, err.message)
 }
 
 func (err *returnError) Error() string{
-	return fmt.Sprintf("return value: %v", err.value)
+	return fmt.Sprintf("Return value: %v", err.value)
 }
 
 func checkNumberOperand(operator token.Token, operand interface{}) error {

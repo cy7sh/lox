@@ -11,6 +11,7 @@ import (
 /*
 program        → block* EOF
 declaration    → funDecl | varDecl | statement
+classDecl      → "class" IDENTIFIER "(" function* "}"
 funDecl        → "fun" function
 function       → IDENTIFIER "(" parameters? ")" block
 parameters     → IDENTIFIER ("," IDENTIFIER )*
@@ -25,7 +26,7 @@ exprStmt       → expression ";"
 printStmt      → "print" expression ";"
 returnStmt     → "return" expression? ";"
 expression     → assignment
-assignment     → IDENTIFIER "=" assignment | logic_or
+assignment     → (call ".")? IDENTIFIER "=" assignment | logic_or
 logic_or       → logic_and ("or" logic_and)*
 logic_and      → ternary ("and" ternary)*
 ternary        → equality "?" equality ":" equality
@@ -35,7 +36,7 @@ term           → factor ( ( "-" | "+" ) factor )*
 factor         → unary ( ( "/" | "*" ) unary )*
 unary          → ( "!" | "-" ) unary | primary | call
 lambda        → "fun" "(" parameters? ")" block
-call           → primary ( "(" arguments? ")" )*
+call           → primary ( "(" arguments? ")" | "." IDENTIFIER )*
 arguments      → expression ("," expression)*
 primary        → NUMBER | STRING | IDENTIFIER | "true" | "false" | "nil" | "(" expression ")"
 */
@@ -60,31 +61,53 @@ func (p *Parser) Parse() []ast.Stmt {
 
 func (p *Parser) declaration() ast.Stmt {
 	if p.match(token.VAR) {
-		name := p.consume(token.IDENTIFIER, "Expected variable name")
-		var initializer ast.Expr
-		if p.match(token.EQUAL) {
-			initializer = p.expression()
-		}
-		p.consume(token.SEMICOLON, "Expected \";\" after variable declaration")
-		return &ast.Var{Name: name, Initializer: initializer}
+		return p.variableDeclaration()
 	}
 	if p.match(token.FUN) {
-		name := p.consume(token.IDENTIFIER, "Expected function name")
-		p.consume(token.LEFT_PAREN, "Expected \"(\" after function name")
-		parameters := make([]token.Token, 0)
-		for !p.match(token.RIGHT_PAREN){
-			param := p.consume(token.IDENTIFIER, "Expected parameter")
-			parameters = append(parameters, param)
-			if p.match(token.RIGHT_PAREN) {
-				break
-			}
-			p.consume(token.COMMA, "Expected \",\" after parameter")
-		}
-		p.consume(token.LEFT_BRACE, "Expected \"{\" before function body")
-		body := p.block().Statements
-		return &ast.Function{Name: name, Parameters: parameters, Body: body}
+		return p.functionDeclaration()
+	}
+	if p.match(token.CLASS) {
+		return p.classDeclaration()
 	}
 	return p.statement()
+}
+
+func (p *Parser) variableDeclaration() *ast.Var {
+	name := p.consume(token.IDENTIFIER, "Expected variable name")
+	var initializer ast.Expr
+	if p.match(token.EQUAL) {
+		initializer = p.expression()
+	}
+	p.consume(token.SEMICOLON, "Expected \";\" after variable declaration")
+	return &ast.Var{Name: name, Initializer: initializer}
+}
+
+func (p *Parser) functionDeclaration() *ast.Function {
+	name := p.consume(token.IDENTIFIER, "Expected function name.")
+	p.consume(token.LEFT_PAREN, "Expected \"(\" after function name.")
+	parameters := make([]token.Token, 0)
+	for !p.match(token.RIGHT_PAREN){
+		param := p.consume(token.IDENTIFIER, "Expected parameter.")
+		parameters = append(parameters, param)
+		if p.match(token.RIGHT_PAREN) {
+			break
+		}
+		p.consume(token.COMMA, "Expected \",\" after parameter.")
+	}
+	p.consume(token.LEFT_BRACE, "Expected \"{\" before function body.")
+	body := p.block().Statements
+	return &ast.Function{Name: name, Parameters: parameters, Body: body}
+}
+
+func (p *Parser) classDeclaration() *ast.Class {
+	name := p.consume(token.IDENTIFIER, "Expected class name.")
+	p.consume(token.LEFT_BRACE, "Expected \"{\" after before class body.")
+	methods := make([]*ast.Function, 0)
+	for !p.check(token.RIGHT_BRACE) && !p.isAtEnd() {
+		methods = append(methods, p.functionDeclaration())
+	}
+	p.consume(token.RIGHT_BRACE, "Expected \"}\" after class bdoy.")
+	return &ast.Class{Name: name, Methods: methods}
 }
 
 func (p *Parser) statement() ast.Stmt {
@@ -195,8 +218,9 @@ func (p *Parser) assignment() ast.Expr {
 		value := p.assignment()
 		switch e := expr.(type) {
 		case *ast.Variable:
-			name := e.Name
-			return &ast.Assign{Name: name, Value: value}
+			return &ast.Assign{Name: e.Name, Value: value}
+		case *ast.Get:
+			return &ast.Set{Name: e.Name, Object: e.Object, Value: value}
 		}
 		p.handleError(equals, "Invalid assignment target")
 	}
@@ -309,8 +333,15 @@ func (p *Parser) lambda() ast.Expr {
 
 func (p *Parser) call() ast.Expr {
 	expr := p.primary()
-	for p.match(token.LEFT_PAREN){
-		expr = p.finishCall(expr)
+	for {
+		if p.match(token.LEFT_PAREN){
+			expr = p.finishCall(expr)
+		} else if p.match(token.DOT) {
+			name := p.consume(token.IDENTIFIER, "Expected property name after \".\".")
+			expr = &ast.Get{Object: expr, Name: name}
+		} else {
+			break
+		}
 	}
 	return expr
 }
@@ -389,7 +420,7 @@ func (p *Parser) reportError(tk token.Token, message string) {
 	if tk.Type == token.EOF {
 		fmt.Printf("[Line %v] Error at end: %v\n", tk.Line, message)
 	} else {
-		fmt.Printf("[Line %v] Error at %v: %v\n", tk.Line, tk.Lexeme, message)
+		fmt.Printf("[Line %v] Error at \"%v\": %v\n", tk.Line, tk.Lexeme, message)
 	}
 }
 
