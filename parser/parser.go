@@ -315,7 +315,7 @@ func (p *Parser) lambda() ast.Expr {
 	if p.match(token.FUN) {
 		p.consume(token.LEFT_PAREN, "Expected \"(\" after \"fun\"")
 		parameters := make([]token.Token, 0)
-		for !p.match(token.RIGHT_PAREN) && p.isAtEnd() {
+		for !p.match(token.RIGHT_PAREN) && !p.isAtEnd() {
 			param := p.consume(token.IDENTIFIER, "Expected parameter")
 			parameters = append(parameters, param)
 			if p.match(token.RIGHT_PAREN) {
