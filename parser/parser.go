@@ -86,7 +86,7 @@ func (p *Parser) functionDeclaration() *ast.Function {
 	name := p.consume(token.IDENTIFIER, "Expected function name.")
 	p.consume(token.LEFT_PAREN, "Expected \"(\" after function name.")
 	parameters := make([]token.Token, 0)
-	for !p.match(token.RIGHT_PAREN){
+	for !p.match(token.RIGHT_PAREN) && !p.isAtEnd() {
 		param := p.consume(token.IDENTIFIER, "Expected parameter.")
 		parameters = append(parameters, param)
 		if p.match(token.RIGHT_PAREN) {
@@ -315,7 +315,7 @@ func (p *Parser) lambda() ast.Expr {
 	if p.match(token.FUN) {
 		p.consume(token.LEFT_PAREN, "Expected \"(\" after \"fun\"")
 		parameters := make([]token.Token, 0)
-		for !p.match(token.RIGHT_PAREN){
+		for !p.match(token.RIGHT_PAREN) && p.isAtEnd() {
 			param := p.consume(token.IDENTIFIER, "Expected parameter")
 			parameters = append(parameters, param)
 			if p.match(token.RIGHT_PAREN) {
@@ -348,7 +348,7 @@ func (p *Parser) call() ast.Expr {
 
 func (p *Parser) finishCall(callee ast.Expr) *ast.Call {
 	arguments := make([]ast.Expr, 0)
-	for !p.check(token.RIGHT_PAREN) {
+	for !p.check(token.RIGHT_PAREN) && !p.isAtEnd() {
 		for {
 			arguments = append(arguments, p.expression())
 			if !p.match(token.COMMA) {
