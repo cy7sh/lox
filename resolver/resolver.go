@@ -4,21 +4,23 @@ import (
 	"errors"
 
 	"github.com/singurty/lox/ast"
-	"github.com/singurty/lox/token"
 )
 
 // function types enum
 type functionType int
+type classType int
 const (
 	NONE = iota
 	FUNCTION
 	METHOD
+	CLASS
 )
 
 type Resolver struct {
 	stack []map[string]bool
 	Locals map[ast.Expr]int
 	currentFunction functionType
+	currentClass classType
 	insideLoop bool
 }
 
@@ -27,6 +29,8 @@ func NewResolver() *Resolver {
 		stack: make([]map[string]bool, 0),
 		Locals: make(map[ast.Expr]int),
 		insideLoop: false,
+		currentFunction: NONE,
+		currentClass: NONE,
 	}
 	return resolver
 }
@@ -192,6 +196,11 @@ func (r *Resolver) resolveExpr(expression ast.Expr) error {
 		if err != nil {
 			return err
 		}
+	case *ast.This:
+		err := r.thisExpr(e)
+		if err != nil {
+			return err
+		}
 	default:
 		return errors.New("unknown expression")
 	}
@@ -224,6 +233,10 @@ func (r *Resolver) varStmt(statement *ast.Var) error {
 }
 
 func (r *Resolver) classStmt(class *ast.Class) error {
+	enclosing := r.currentClass
+	r.currentClass = CLASS
+	r.beginScope()
+	r.peek()["this"] = true
 	r.declare(class.Name.Lexeme)
 	r.define(class.Name.Lexeme)
 	for _, method := range class.Methods {
@@ -232,7 +245,9 @@ func (r *Resolver) classStmt(class *ast.Class) error {
 			return err
 		}
 	}
-	return r.declare(class.Name.Lexeme)
+	r.endScope()
+	r.currentClass = enclosing
+	return nil
 }
 
 func (r *Resolver) declare(name string) error {
@@ -259,12 +274,12 @@ func (r *Resolver) variableExpr(expr *ast.Variable) error {
 			return errors.New("Can't read local variable in its own initializer.")
 		}
 	}
-	return r.resolveLocal(expr, expr.Name)
+	return r.resolveLocal(expr, expr.Name.Lexeme)
 }
 
-func (r *Resolver) resolveLocal(expr ast.Expr, name token.Token) error {
+func (r *Resolver) resolveLocal(expr ast.Expr, name string) error {
 	for i := len(r.stack) - 1; i >= 0; i-- {
-		if _, ok := r.stack[i][name.Lexeme]; ok {
+		if _, ok := r.stack[i][name]; ok {
 			r.Locals[expr] = len(r.stack) - 1 - i
 			return nil
 		}
@@ -277,7 +292,7 @@ func (r *Resolver) assignExpr(expr *ast.Assign) error {
 	if err != nil {
 		return err
 	}
-	return r.resolveLocal(expr, expr.Name)
+	return r.resolveLocal(expr, expr.Name.Lexeme)
 }
 
 func (r *Resolver) setExpr(expr *ast.Set) error {
@@ -466,4 +481,11 @@ func (r *Resolver) logicalExpr(expr *ast.Logical) error {
 
 func (r *Resolver) unaryExpr(expr *ast.Unary) error {
 	return r.resolveExpr(expr.Right)
+}
+
+func (r *Resolver) thisExpr(expr *ast.This) error {
+	if r.currentClass == NONE {
+		return errors.New("Cannot use \"this\" outside of a class.")
+	}
+	return r.resolveLocal(expr, expr.Keyword.Lexeme)
 }

@@ -7,7 +7,7 @@ $ lox [filename]
 Starts an interactive shell if `filename` is omitted.
 
 ## Documentation
-#### Variable
+#### Variables
 - Delcaration
 ```
 var a;
@@ -20,28 +20,28 @@ a = 10;
 ```
 var a = 10;
 ```
-### Boolean
+### Booleans
 There are two boolean primitives `true` and `false`. `null` is falsey; anything else is truthy.
-### Block
+### Blocks
 Block is a statement containing other statements. Statements inside a block have their own environment with variables. Statements inside the block can access and modify variables declared outside the block. Variables declared inside the block are only accessible inside the block.
 ```
 {
     statements
 }
 ```
-### While loop
+### While loops
 ```
 while (condition)
     statement
 ```
 
-### For loop
+### For loops
 ```
 for (initializer; condition; increment)
     statement
 ```
 `initilizer` can be variable declaration or an expression. If a variable is declared, it's scope is limited to the loop. It is evaluated before the loop starts. `condition` must be an expression. It is evaluated *before* each iteration. Loop terminates if the result is falsey. `increment` must be an expression. It is evaluated *after* each iteration.
-### Continue and break
+### continue and break statements
 ```
 continue;
 ```
@@ -50,7 +50,7 @@ Stop current iteration and continue with another iteration of this loop. `condit
 break;
 ```
 Break out of current loop and continue executing statements after the loop.
-### if else
+### if else statements
 ```
 if (condition)
     statement
@@ -76,12 +76,12 @@ yes
 2
 false
 ```
-### Ternary operator
+### Ternary operators
 ```
 <condition> ? <if expression> : <else expression>
 ```
 
-### Function
+### Functions
 ```
 fun fib(n) {
 	if (n <= 1) return n;
@@ -115,7 +115,7 @@ Output:
 2584
 4181
 ```
-#### Closure
+#### Closures
 ```
 fun makeCounter() {
   var i = 0;
@@ -142,7 +142,7 @@ Output:
 4
 5
 ```
-### Lambda (Anonymous function)
+### Lambdas (Anonymous functions)
 ```
 fun thrice(fn) {
   for (var i = 1; i <= 3; i = i + 1) {
@@ -159,4 +159,47 @@ Output:
 1
 2
 3
+```
+### Classes
+#### Properties
+```
+class Bagel{}
+var bagel = Bagel();
+bagel.prop = "property";
+print bagel.prop;
+```
+Output:
+```
+property
+```
+#### Methods
+```
+class Bacon {
+  eat() {
+    print "Crunch crunch crunch!";
+  }
+}
+
+Bacon().eat();
+```
+Output:
+```
+Crunch crunch crunch!
+```
+#### this
+```
+class Cake {
+  taste() {
+    var adjective = "delicious";
+    print "The " + this.flavor + " cake is " + adjective + "!";
+  }
+}
+
+var cake = Cake();
+cake.flavor = "German chocolate";
+cake.taste();
+```
+Output:
+```
+The German chocolate cake is delicious!
 ```

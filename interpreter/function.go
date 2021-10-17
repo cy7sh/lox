@@ -46,6 +46,15 @@ func (u *userFunction) call(arguments []interface{}) (interface{}, error) {
 	return funCall(u.closure, u.declaration.Parameters, u.arity(), u.declaration.Body, arguments)
 }
 
+func (u *userFunction) Bind(instance *Instance) (*userFunction, error) {
+	env := environment.Local(u.closure)
+	err := env.Define("this", instance)
+	if err != nil {
+		return nil, err
+	}
+	return &userFunction{declaration: u.declaration, closure: env}, nil
+}
+
 type lambda struct {
 	declaration *ast.Lambda
 	closure *environment.Environment

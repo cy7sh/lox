@@ -175,6 +175,14 @@ func (l *Lambda) String() string {
 	return sb.String()
 }
 
+type This struct {
+	Keyword token.Token
+}
+
+func (t *This) String() string {
+	return "<this>"
+}
+
 type While struct {
 	Condition Expr
 	Body Stmt

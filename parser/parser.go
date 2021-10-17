@@ -384,6 +384,9 @@ func (p *Parser) primary() ast.Expr {
 		p.consume(token.RIGHT_PAREN, "Expected ')' after expression.")
 		return &ast.Grouping{Expression: expr}
 	}
+	if p.match(token.THIS) {
+		return &ast.This{Keyword: p.previous()}
+	}
 	p.handleError(p.peek(), "Expected expression.")
 	return nil
 }

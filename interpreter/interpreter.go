@@ -247,7 +247,7 @@ func evaluate(node ast.Expr) (interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
-			if object, ok := object.(*instance); ok {
+			if object, ok := object.(*Instance); ok {
 				value, err := evaluate(n.Value)
 				if err != nil {
 					return nil, err
@@ -405,11 +405,13 @@ func evaluate(node ast.Expr) (interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
-			if object, ok := object.(*instance); ok {
+			if object, ok := object.(*Instance); ok {
 				return object.get(n.Name)
 			} else {
 				return nil, &runtimeError{line: n.Name.Line, where: n.Name.Lexeme, message: "Only instances have properties."}
 			}
+		case *ast.This:
+			return lookUpVariable(n.Keyword.Lexeme, n)
 	}
 	return nil, &runtimeError{message: "Error evaluating expression"}
 }

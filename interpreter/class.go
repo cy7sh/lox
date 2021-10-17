@@ -31,30 +31,34 @@ func (c *class) findMethod(name string) *userFunction {
 	}
 }
 
-type instance struct {
+type Instance struct {
 	klass *class
 	fields map[string]interface{}
 }
 
-func newInstance(klass *class) *instance {
-	return &instance{klass: klass, fields: make(map[string]interface{})}
+func newInstance(klass *class) *Instance {
+	return &Instance{klass: klass, fields: make(map[string]interface{})}
 }
 
-func (i *instance) String() string {
+func (i *Instance) String() string {
 	return "<instance " + i.klass.name + ">"
 }
 
-func (i *instance) get(name token.Token) (interface{}, error) {
+func (i *Instance) get(name token.Token) (interface{}, error) {
 	if value, ok := i.fields[name.Lexeme]; ok {
 		return value, nil
 	}
 	method := i.klass.findMethod(name.Lexeme)
 	if method != nil {
+		method, err := method.Bind(i)
+		if err != nil {
+			return nil, err
+		}
 		return method, nil
 	}
 	return nil, &runtimeError{line: name.Line, message: "Undefined property \"" + name.Lexeme + "\"."}
 }
 
-func (i *instance) set(name string, value interface{}) {
+func (i *Instance) set(name string, value interface{}) {
 	i.fields[name] = value
 }

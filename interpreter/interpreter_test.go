@@ -507,6 +507,24 @@ Bacon().eat();
 Crunch crunch crunch!
 `,
 		},
+		{
+// test this
+`
+class Cake {
+  taste() {
+    var adjective = "delicious";
+    print "The " + this.flavor + " cake is " + adjective + "!";
+  }
+}
+
+var cake = Cake();
+cake.flavor = "German chocolate";
+cake.taste();
+`,
+`
+The German chocolate cake is delicious!
+`,
+		},
 	}
 	testInterpreterOutputs(tests, t)
 }
