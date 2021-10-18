@@ -203,3 +203,55 @@ Output:
 ```
 The German chocolate cake is delicious!
 ```
+#### Initializers
+```
+class Foo {
+        init(first, second) {
+                this.first = first;
+                this.second = second;
+        }
+        display() {
+                print this.first;
+                print this.second;
+        }
+}
+
+var bar = Foo("hello", "world");
+bar.display();
+```
+Output:
+```
+hello
+world
+```
+```
+class Foo {
+	init(first, second) {
+		this.first = first;
+		this.second = second;
+	}
+	display() {
+		print this.first;
+		print this.second;
+	}
+}
+
+var bar = Foo("hello", "world");
+bar.display();
+bar.first = "bye";
+bar.second = "earth";
+bar.display();
+bar.init("hello", "world").display();
+bar.display();
+```
+Output:
+```
+hello
+world
+bye
+earth
+hello
+world
+hello
+world
+```
