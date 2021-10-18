@@ -195,6 +195,9 @@ func execute(statement ast.Stmt) error {
 		methods := make(map[string]*userFunction)
 		for _, method := range s.Methods {
 			function := &userFunction{declaration: method, closure: env}
+			if method.Name.Lexeme == "init" {
+				function.isInitializer = true
+			}
 			methods[method.Name.Lexeme] = function
 		}
 		klass := newClass(s.Name.Lexeme, methods)
@@ -406,7 +409,8 @@ func evaluate(node ast.Expr) (interface{}, error) {
 				return nil, err
 			}
 			if object, ok := object.(*Instance); ok {
-				return object.get(n.Name)
+				value, err := object.get(n.Name)
+				return value, err
 			} else {
 				return nil, &runtimeError{line: n.Name.Line, where: n.Name.Lexeme, message: "Only instances have properties."}
 			}

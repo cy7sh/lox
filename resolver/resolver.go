@@ -13,6 +13,7 @@ const (
 	NONE = iota
 	FUNCTION
 	METHOD
+	INITIALIZER
 	CLASS
 )
 
@@ -240,7 +241,13 @@ func (r *Resolver) classStmt(class *ast.Class) error {
 	r.declare(class.Name.Lexeme)
 	r.define(class.Name.Lexeme)
 	for _, method := range class.Methods {
-		err := r.resolveFunction(method, METHOD)
+		var declaration functionType
+		if method.Name.Lexeme == "init" {
+			declaration = INITIALIZER
+		} else {
+			declaration = METHOD
+		}
+		err := r.resolveFunction(method, declaration)
 		if err != nil {
 			return err
 		}
@@ -364,6 +371,9 @@ func (r *Resolver) returnStmt(stmt *ast.Return) error {
 		return errors.New("Cannot return from top-level code.")
 	}
 	if stmt.Value != nil {
+		if r.currentFunction == INITIALIZER {
+			return errors.New("Cannot return from an initializer.")
+		}
 		return r.resolveExpr(stmt.Value)
 	}
 	return nil

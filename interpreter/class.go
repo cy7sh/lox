@@ -1,6 +1,8 @@
 package interpreter
 
-import "github.com/singurty/lox/token"
+import (
+	"github.com/singurty/lox/token"
+)
 
 type class struct {
 	name string
@@ -16,11 +18,27 @@ func (c *class) String() string {
 }
 
 func (c *class) arity() int {
+	initializer := c.findMethod("init")
+	if initializer != nil {
+		return initializer.arity()
+	}
 	return 0
 }
 
 func (c *class) call(arguments []interface{}) (interface{}, error) {
-	return newInstance(c), nil
+	instance := newInstance(c)
+	initializer := c.findMethod("init")
+	if initializer != nil {
+		initializer, err := initializer.Bind(instance)
+		if err != nil {
+			return nil, err
+		}
+		_, err = initializer.call(arguments)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return instance, nil
 }
 
 func (c *class) findMethod(name string) *userFunction {

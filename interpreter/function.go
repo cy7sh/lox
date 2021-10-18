@@ -2,8 +2,8 @@ package interpreter
 
 import (
 	"github.com/singurty/lox/ast"
-	"github.com/singurty/lox/token"
 	"github.com/singurty/lox/environment"
+	"github.com/singurty/lox/token"
 )
 
 type callable interface {
@@ -32,6 +32,7 @@ func (n *nativeFunction) String() string {
 type userFunction struct {
 	declaration *ast.Function
 	closure *environment.Environment
+	isInitializer bool
 }
 
 func (u *userFunction) arity() int {
@@ -43,6 +44,10 @@ func (u *userFunction) String() string {
 }
 
 func (u *userFunction) call(arguments []interface{}) (interface{}, error) {
+	if u.isInitializer {
+		funCall(u.closure, u.declaration.Parameters, u.arity(), u.declaration.Body, arguments)
+		return u.closure.GetAt(0, "this")
+	}
 	return funCall(u.closure, u.declaration.Parameters, u.arity(), u.declaration.Body, arguments)
 }
 
@@ -52,7 +57,7 @@ func (u *userFunction) Bind(instance *Instance) (*userFunction, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &userFunction{declaration: u.declaration, closure: env}, nil
+	return &userFunction{declaration: u.declaration, closure: env, isInitializer: u.isInitializer}, nil
 }
 
 type lambda struct {

@@ -525,7 +525,80 @@ cake.taste();
 The German chocolate cake is delicious!
 `,
 		},
+		{
+// test initializer
+`
+class Foo {
+        init(first, second) {
+                this.first = first;
+                this.second = second;
+        }
+        display() {
+                print this.first;
+                print this.second;
+        }
+}
+
+var bar = Foo("hello", "world");
+bar.display();
+`,
+`
+hello
+world
+`,
+	},
+	{
+`
+class Foo {
+	init(first, second) {
+		this.first = first;
+		this.second = second;
 	}
+	display() {
+		print this.first;
+		print this.second;
+	}
+}
+
+var bar = Foo("hello", "world");
+bar.display();
+bar.first = "bye";
+bar.second = "earth";
+bar.display();
+bar.init("hello", "world").display();
+bar.display();
+`,
+`
+hello
+world
+bye
+earth
+hello
+world
+hello
+world
+`,
+	},
+	{
+`
+class Foo {
+	init() {
+		this.yo = "before";
+		return;
+		this.yo = "after";
+	}
+	display() {
+		print this.yo;
+	}
+}
+
+Foo().display();
+`,
+`
+before
+`,
+	},
+		}
 	testInterpreterOutputs(tests, t)
 }
 
