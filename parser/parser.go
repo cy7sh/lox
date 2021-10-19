@@ -39,6 +39,7 @@ lambda        → "fun" "(" parameters? ")" block
 call           → primary ( "(" arguments? ")" | "." IDENTIFIER )*
 arguments      → expression ("," expression)*
 primary        → NUMBER | STRING | IDENTIFIER | "true" | "false" | "nil" | "(" expression ")"
+                 | "super" "." IDENTIFIER
 */
 
 type Parser struct {
@@ -117,7 +118,7 @@ func (p *Parser) classDeclaration() *ast.Class {
 func (p *Parser) statement() ast.Stmt {
 	if p.match(token.PRINT) {
 		expr := p.expression()
-		p.consume(token.SEMICOLON, "Expected \";\" after expression")
+		p.consume(token.SEMICOLON, "Expected \";\" after expression.")
 		return &ast.PrintStmt{Expression: expr}
 	}
 	if p.match(token.IF) {
@@ -390,6 +391,12 @@ func (p *Parser) primary() ast.Expr {
 	}
 	if p.match(token.THIS) {
 		return &ast.This{Keyword: p.previous()}
+	}
+	if p.match(token.SUPER) {
+		keyword := p.previous()
+		p.consume(token.DOT, "Expected \".\" after \"super\".")
+		method := p.consume(token.IDENTIFIER, "Expected superclass method name.")
+		return &ast.Super{Keyword: keyword, Method: method}
 	}
 	p.handleError(p.peek(), "Expected expression.")
 	return nil

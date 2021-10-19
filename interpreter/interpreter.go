@@ -191,6 +191,8 @@ func execute(statement ast.Stmt) error {
 		}
 		return &returnError{value: value}
 	case *ast.Class:
+		// methods might refrence this class
+		env.Define(s.Name.Lexeme, nil)
 		var superClass *class
 		if s.SuperClass != nil {
 			superClassVar, err := evaluate(s.SuperClass)
@@ -201,9 +203,9 @@ func execute(statement ast.Stmt) error {
 			if superClass, ok = superClassVar.(*class); !ok {
 				return &runtimeError{line: s.SuperClass.Name.Line, where: s.SuperClass.Name.Lexeme, message: "Superclass must be a class."}
 			}
+			env = environment.Local(env)
+			env.Define("super", superClass)
 		}
-		// methods might refrence this class
-		env.Define(s.Name.Lexeme, nil)
 		methods := make(map[string]*userFunction)
 		for _, method := range s.Methods {
 			function := &userFunction{declaration: method, closure: env}
@@ -213,6 +215,9 @@ func execute(statement ast.Stmt) error {
 			methods[method.Name.Lexeme] = function
 		}
 		klass := &class{name: s.Name.Lexeme, superClass: superClass, methods: methods}
+		if s.SuperClass != nil {
+			env = env.Enclosing
+		}
 		env.Assign(s.Name.Lexeme, klass)
 	}
 	return nil
@@ -428,6 +433,16 @@ func evaluate(node ast.Expr) (interface{}, error) {
 			}
 		case *ast.This:
 			return lookUpVariable(n.Keyword.Lexeme, n)
+		case *ast.Super:
+			superClass, err := lookUpVariable(n.Keyword.Lexeme, n)
+			if err != nil {
+				return nil, err
+			}
+			method := superClass.(*class).findMethod(n.Method.Lexeme)
+			if method == nil {
+				return nil, &runtimeError{line:n.Method.Line, where: n.Method.Lexeme, message: "Undefined method."}
+			}
+			return method, nil
 	}
 	return nil, &runtimeError{message: "Error evaluating expression"}
 }

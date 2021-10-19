@@ -16,7 +16,6 @@ import (
 func main() {
 	if len(os.Args) > 2 {
 		fmt.Printf("Usage: %v [file]\n", os.Args[0])
-		os.Exit(1)
 	} else if len(os.Args) == 2 {
 		runFile(os.Args[1])
 	} else {
@@ -50,7 +49,6 @@ func runFile(file string) {
 	err = run(string(content))
 	if err != nil {
 		fmt.Println(err.Error())
-		os.Exit(1)
 	}
 }
 

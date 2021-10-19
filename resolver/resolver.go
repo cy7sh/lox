@@ -15,6 +15,7 @@ const (
 	METHOD
 	INITIALIZER
 	CLASS
+	SUBCLASS
 )
 
 type Resolver struct {
@@ -202,6 +203,11 @@ func (r *Resolver) resolveExpr(expression ast.Expr) error {
 		if err != nil {
 			return err
 		}
+	case *ast.Super:
+		err := r.superExpr(e)
+		if err != nil {
+			return err
+		}
 	default:
 		return errors.New("unknown expression")
 	}
@@ -234,15 +240,21 @@ func (r *Resolver) varStmt(statement *ast.Var) error {
 }
 
 func (r *Resolver) classStmt(class *ast.Class) error {
+	if class.SuperClass != nil && class.SuperClass.Name.Lexeme == class.Name.Lexeme {
+		return errors.New("A class cannot inherit from itself.")
+	}
 	enclosing := r.currentClass
-	r.currentClass = CLASS
+	if class.SuperClass != nil {
+		r.currentClass = SUBCLASS
+		r.beginScope()
+		r.peek()["super"] = true
+	} else {
+		r.currentClass = CLASS
+	}
 	r.beginScope()
 	r.peek()["this"] = true
 	r.declare(class.Name.Lexeme)
 	r.define(class.Name.Lexeme)
-	if class.SuperClass != nil && class.SuperClass.Name.Lexeme == class.Name.Lexeme {
-		return errors.New("A class cannot inherit from itself.")
-	}
 	if class.SuperClass != nil {
 		r.variableExpr(class.SuperClass)
 	}
@@ -259,6 +271,9 @@ func (r *Resolver) classStmt(class *ast.Class) error {
 		}
 	}
 	r.endScope()
+	if class.SuperClass != nil {
+		r.endScope()
+	}
 	r.currentClass = enclosing
 	return nil
 }
@@ -504,4 +519,12 @@ func (r *Resolver) thisExpr(expr *ast.This) error {
 		return errors.New("Cannot use \"this\" outside of a class.")
 	}
 	return r.resolveLocal(expr, expr.Keyword.Lexeme)
+}
+
+func (r *Resolver) superExpr(expr *ast.Super) error {
+	if r.currentClass != SUBCLASS {
+		return errors.New("Cannot use \"super\" outside of a subclass.")
+	}
+	r.resolveLocal(expr, expr.Keyword.Lexeme)
+	return nil
 }

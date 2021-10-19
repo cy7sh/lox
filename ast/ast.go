@@ -182,6 +182,15 @@ func (t *This) String() string {
 	return "<this>"
 }
 
+type Super struct {
+	Keyword token.Token
+	Method token.Token
+}
+
+func (s *Super) String() string {
+	return "<super." + s.Method.Lexeme + ">"
+}
+
 type While struct {
 	Condition Expr
 	Body Stmt

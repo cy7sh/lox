@@ -6,15 +6,15 @@ import (
 
 type Environment struct {
 	environment map[string]interface{}
-	enclosing *Environment
+	Enclosing *Environment
 }
 
 func Global() *Environment {
-	return  &Environment{environment: make(map[string]interface{}), enclosing: nil}
+	return  &Environment{environment: make(map[string]interface{}), Enclosing: nil}
 }
 
-func Local(enclosing *Environment) *Environment {
-	return &Environment{environment: make(map[string]interface{}), enclosing: enclosing}
+func Local(Enclosing *Environment) *Environment {
+	return &Environment{environment: make(map[string]interface{}), Enclosing: Enclosing}
 }
 
 func (e *Environment) Define(variable string, value interface{}) error {
@@ -31,8 +31,8 @@ func (e *Environment) Assign(variable string, value interface{}) error {
 		e.environment[variable] = value
 		return nil
 	} else {
-		if e.enclosing != nil {
-			return e.enclosing.Assign(variable, value)
+		if e.Enclosing != nil {
+			return e.Enclosing.Assign(variable, value)
 		}
 		return errors.New("Undefined variable \"" + variable + "\"")
 	}
@@ -56,8 +56,8 @@ func (e *Environment) Get(variable string) (interface{}, error) {
 		}
 		return value, nil
 	} else {
-		if e.enclosing != nil {
-			return e.enclosing.Get(variable)
+		if e.Enclosing != nil {
+			return e.Enclosing.Get(variable)
 		}
 		return nil, errors.New("Undefined variable \"" + variable + "\"")
 	}
@@ -77,7 +77,7 @@ func (e *Environment) GetAt(distance int, variable string) (interface{}, error) 
 func (e *Environment) ancestor(distance int) *Environment {
 	env := e
 	for i := 0; i < distance; i++ {
-		env = env.enclosing
+		env = env.Enclosing
 	}
 	return env
 }
