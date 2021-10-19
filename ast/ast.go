@@ -166,7 +166,6 @@ func (l *Logical) String() string {
 type Lambda struct {
 	Parameters []token.Token
 	Body []Stmt
-
 }
 
 func (l *Lambda) String() string {
@@ -232,5 +231,6 @@ type Return struct {
 
 type Class struct {
 	Name token.Token
+	SuperClass *Variable
 	Methods []*Function
 }

@@ -191,6 +191,18 @@ func execute(statement ast.Stmt) error {
 		}
 		return &returnError{value: value}
 	case *ast.Class:
+		var superClass *class
+		if s.SuperClass != nil {
+			superClassVar, err := evaluate(s.SuperClass)
+			if err != nil {
+				return err
+			}
+			var ok bool
+			if superClass, ok = superClassVar.(*class); !ok {
+				return &runtimeError{line: s.SuperClass.Name.Line, where: s.SuperClass.Name.Lexeme, message: "Superclass must be a class."}
+			}
+		}
+		// methods might refrence this class
 		env.Define(s.Name.Lexeme, nil)
 		methods := make(map[string]*userFunction)
 		for _, method := range s.Methods {
@@ -200,7 +212,7 @@ func execute(statement ast.Stmt) error {
 			}
 			methods[method.Name.Lexeme] = function
 		}
-		klass := newClass(s.Name.Lexeme, methods)
+		klass := &class{name: s.Name.Lexeme, superClass: superClass, methods: methods}
 		env.Assign(s.Name.Lexeme, klass)
 	}
 	return nil

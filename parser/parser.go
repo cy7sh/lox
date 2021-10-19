@@ -11,7 +11,7 @@ import (
 /*
 program        → block* EOF
 declaration    → funDecl | varDecl | statement
-classDecl      → "class" IDENTIFIER "(" function* "}"
+classDecl      → "class" IDENTIFIER ("<" IDENTIFIER)? "(" function* "}"
 funDecl        → "fun" function
 function       → IDENTIFIER "(" parameters? ")" block
 parameters     → IDENTIFIER ("," IDENTIFIER )*
@@ -101,13 +101,17 @@ func (p *Parser) functionDeclaration() *ast.Function {
 
 func (p *Parser) classDeclaration() *ast.Class {
 	name := p.consume(token.IDENTIFIER, "Expected class name.")
+	var superClass *ast.Variable
+	if p.match(token.LESS) {
+		superClass = &ast.Variable{Name: p.consume(token.IDENTIFIER, "Expected superclass name after \"<\".")}
+	}
 	p.consume(token.LEFT_BRACE, "Expected \"{\" after before class body.")
 	methods := make([]*ast.Function, 0)
 	for !p.check(token.RIGHT_BRACE) && !p.isAtEnd() {
 		methods = append(methods, p.functionDeclaration())
 	}
 	p.consume(token.RIGHT_BRACE, "Expected \"}\" after class bdoy.")
-	return &ast.Class{Name: name, Methods: methods}
+	return &ast.Class{Name: name, SuperClass: superClass, Methods: methods}
 }
 
 func (p *Parser) statement() ast.Stmt {

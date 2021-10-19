@@ -6,11 +6,8 @@ import (
 
 type class struct {
 	name string
+	superClass *class
 	methods map[string]*userFunction
-}
-
-func newClass(name string, methods map[string]*userFunction) *class {
-	return &class{name: name, methods: methods}
 }
 
 func (c *class) String() string {
@@ -44,9 +41,10 @@ func (c *class) call(arguments []interface{}) (interface{}, error) {
 func (c *class) findMethod(name string) *userFunction {
 	if value, ok := c.methods[name]; ok {
 		return value
-	} else {
-		return nil
+	} else if c.superClass != nil {
+		return c.superClass.findMethod(name)
 	}
+	return nil
 }
 
 type Instance struct {

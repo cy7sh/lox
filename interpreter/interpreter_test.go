@@ -525,8 +525,13 @@ cake.taste();
 The German chocolate cake is delicious!
 `,
 		},
+	}
+	testInterpreterOutputs(tests, t)
+}
+
+func TestInitializer(t *testing.T) {
+	tests := testInputs{
 		{
-// test initializer
 `
 class Foo {
         init(first, second) {
@@ -598,7 +603,29 @@ Foo().display();
 before
 `,
 	},
-		}
+	}
+	testInterpreterOutputs(tests, t)
+}
+
+func TestInheritance(t *testing.T) {
+	tests := testInputs{
+		{
+`
+class Doughnut {
+  cook() {
+    print "Fry until golden brown.";
+  }
+}
+
+class BostonCream < Doughnut {}
+
+BostonCream().cook();
+`,
+`
+Fry until golden brown.
+`,
+		},
+	}
 	testInterpreterOutputs(tests, t)
 }
 

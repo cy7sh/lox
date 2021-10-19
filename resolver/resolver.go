@@ -240,6 +240,12 @@ func (r *Resolver) classStmt(class *ast.Class) error {
 	r.peek()["this"] = true
 	r.declare(class.Name.Lexeme)
 	r.define(class.Name.Lexeme)
+	if class.SuperClass != nil && class.SuperClass.Name.Lexeme == class.Name.Lexeme {
+		return errors.New("A class cannot inherit from itself.")
+	}
+	if class.SuperClass != nil {
+		r.variableExpr(class.SuperClass)
+	}
 	for _, method := range class.Methods {
 		var declaration functionType
 		if method.Name.Lexeme == "init" {
