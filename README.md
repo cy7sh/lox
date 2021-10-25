@@ -1,4 +1,4 @@
-The best language in the universe (yep, aliens too)
+A tree-walk interpreter for Lox in Go following [Crafting Interpreters](https://craftinginterpreters.com/).
 
 ## Usage
 ```
